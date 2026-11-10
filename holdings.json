@@ -86,6 +86,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-06-25"
+    },
+    {
+      "sym": "GOOG",
+      "name": "Google",
+      "shares": 6,
+      "cost": 329.07,
+      "stop": 229,
+      "tp": 600,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-20"
     }
   ],
   "watchlist": [
