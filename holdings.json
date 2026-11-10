@@ -20,6 +20,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-06-23"
+    },
+    {
+      "sym": "006208.TW",
+      "name": "富邦台50",
+      "shares": 760,
+      "cost": 138.22,
+      "stop": 90,
+      "tp": 300,
+      "why": "ETF",
+      "rule": "",
+      "entry_date": "2025-12-10"
     }
   ],
   "watchlist": [
