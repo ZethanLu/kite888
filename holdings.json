@@ -141,6 +141,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-20"
+    },
+    {
+      "sym": "SPCX",
+      "name": "Space X",
+      "shares": 16,
+      "cost": 162.55,
+      "stop": 80,
+      "tp": 1000,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-20"
     }
   ],
   "watchlist": [
