@@ -23,18 +23,6 @@
       "rule": "ETF 不設硬停損"
     },
     {
-      "sym": "NVDA",
-      "name": "NVIDIA",
-      "shares": 50,
-      "cost": 118.5,
-      "stop": 128,
-      "tp": 165,
-      "why": "資料中心需求持續,財報後突破盤整區。",
-      "rule": "跌破前波支撐停損",
-      "strategy": "D",
-      "entry_date": "2026-11-03"
-    },
-    {
       "sym": "AAPL",
       "name": "Apple",
       "shares": 40,
