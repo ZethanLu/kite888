@@ -31,6 +31,17 @@
       "why": "ETF",
       "rule": "",
       "entry_date": "2025-01-09"
+    },
+    {
+      "sym": "2383.TW",
+      "name": "台光電",
+      "shares": 17,
+      "cost": 5189.94,
+      "stop": 3000,
+      "tp": 6000,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-14"
     }
   ],
   "watchlist": [
