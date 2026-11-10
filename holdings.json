@@ -130,6 +130,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-20"
+    },
+    {
+      "sym": "MRVL",
+      "name": "Marvell",
+      "shares": 8,
+      "cost": 185.03,
+      "stop": 85,
+      "tp": 400,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-20"
     }
   ],
   "watchlist": [
