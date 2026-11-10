@@ -42,13 +42,20 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-14"
+    },
+    {
+      "sym": "2454.TW",
+      "name": "聯發科",
+      "shares": 16,
+      "cost": 5189.94,
+      "stop": 3600,
+      "tp": 10000,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-01"
     }
   ],
   "watchlist": [
-    {
-      "sym": "2454.TW",
-      "name": "聯發科"
-    },
     {
       "sym": "6213.TW",
       "name": "聯茂"
