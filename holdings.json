@@ -108,6 +108,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-20"
+    },
+    {
+      "sym": "AVGO",
+      "name": "Broadcom",
+      "shares": 3,
+      "cost": 318.88,
+      "stop": 218,
+      "tp": 600,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-20"
     }
   ],
   "watchlist": [
