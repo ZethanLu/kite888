@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>STOCK WEB 持股儀表板</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;color-scheme:light;--bg:#f1f3f8;--card:#fff;--tx:#1b2330;--mu:#6b7686;--ac:#0f9d83;--acbg:#dff4ef;--r:#e0453a;--g:#12a36b;--st:#ea7c1e;--tpc:#8b5cf6;--bd:#e3e7ee;--warnbg:#fff1dc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#93a0b0;--ac:#35c7a8;--acbg:#16352e;--r:#ff6b5f;--g:#3dd68c;--bd:#2a3441;--warnbg:#3b2a14}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#93a0b0;--ac:#35c7a8;--acbg:#16352e;--r:#ff6b5f;--g:#3dd68c;--bd:#2a3441;--warnbg:#3b2a14}
+*{box-sizing:border-box}
+body{margin:0;padding:env(safe-area-inset-top,0px) 0 calc(76px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--tx);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.5}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--card);border-bottom:1px solid var(--bd);padding:12px 18px;display:flex;gap:12px;align-items:baseline}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
+.logo{color:var(--ac);font-weight:800;letter-spacing:.12em}
+main{max-width:720px;margin:0 auto;padding:14px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.mu{color:var(--mu);font-size:13px}.big{font-size:26px;font-weight:700;line-height:1.2}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec{margin:16px 2px 8px;font-weight:700}
+.note{background:var(--acbg);color:var(--ac);border-radius:10px;padding:8px 12px;font-size:12px;margin-bottom:12px}
+.note.w{background:var(--warnbg);color:var(--st)}
+.alert{background:var(--warnbg);border-radius:12px;padding:12px;margin-top:10px}.alert b{color:var(--st)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{font-size:12px;border-radius:99px;padding:2px 10px;background:var(--acbg);color:var(--ac);white-space:nowrap}
+.chip.bad{background:var(--warnbg);color:var(--st)}
+.seg{display:flex;gap:6px;margin-bottom:12px}
+button,input{font:inherit;color:var(--tx)}
+.seg button,.back{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
+.seg button.on{background:var(--acbg);color:var(--ac);border-color:var(--ac)}
+input{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px}
+.item,.rs div{cursor:pointer}.rs div{padding:8px 4px;border-top:1px solid var(--bd)}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.kv div{background:var(--bg);border-radius:10px;padding:8px 10px}.kv b{display:block;font-size:16px}
+.bar{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--st),var(--bd) 35%,var(--bd) 65%,var(--tpc));margin:22px 0 6px}
+.bar i{position:absolute;top:-5px;width:4px;height:18px;border-radius:2px;background:var(--tx)}
+ul{margin:6px 0 0;padding-left:18px}li{margin:6px 0}a{color:var(--ac)}
+svg{width:100%;height:auto;display:block}.gl{stroke:var(--bd);stroke-width:.5}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;max-width:240px;border:0;background:none;color:var(--mu);padding:10px 0 12px;cursor:pointer}
+nav button.on{color:var(--ac);font-weight:700}
+select{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
+details summary{cursor:pointer}
+.btn{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
+.btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
+.ed{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.ed label{font-size:12px;color:var(--mu)}.ed .f{grid-column:1/-1}
+</style>
+</head>
+<body>
+<header><span class="logo">STOCK WEB</span><b id="ttl">總覽</b></header>
+<main><div class="card" style="padding:10px"><input id="q" placeholder="搜尋個股:代號或名稱,例如 2330、台積電、NVDA" autocomplete="off"><div class="rs" id="rs"></div></div><div id="app"></div></main>
+<nav><button data-t="home" class="on">總覽</button><button data-t="hold">持股</button></nav>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=(n,d=2)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ema=(a,n)=>{const k=2/(n+1);let e=a[0];return a.map(v=>e=v*k+e*(1-k))};
+const ma=(a,n)=>a.map((_,i)=>i<n-1?null:a.slice(i-n+1,i+1).reduce((x,y)=>x+y,0)/n);
+const mkt=s=>/\.TWO?$|^\^TW/.test(s)?"TW":"US",cur=m=>m==="TW"?"NT$":"US$";
+const cc=v=>v>=0?"var(--r)":"var(--g)",sgn=v=>(v>=0?"+":"−")+fmt(Math.abs(v));
+const UP="var(--r)",DN="var(--g)";
+const RG={STRONG_WIND:"強風・易漲",NO_WIND:"無風・易跌",CHOPPY:"亂流・震盪"};
+const RGN={STRONG_WIND:"老闆型、上班族型全策略可用",NO_WIND:"僅限老闆型「廉價收購」,上班族型暫停",CHOPPY:"老闆型分 5 筆以上,上班族型降級或觀望"};
+const ST={A:"老闆型・週拉回風箏",B:"老闆型・廉價收購",C:"上班族型・週趨勢風箏",D:"上班族型・強勢週風箏"};
+const LV={LEVEL_1:"營收創歷史新高",LEVEL_2:"爆發成長(YoY ≥ 100%)",LEVEL_3:"穩定門檻(YoY ≥ 30%)",FILTER_OUT:"YoY < 30%(排除)"};
+const rgOf=sym=>(DB.indices[/\.TWO$/.test(sym)?"^TWOII":/\.TW$/.test(sym)?"^TWII":"^GSPC"]||{}).regime;
+const allowed=sym=>rgOf(sym)==="NO_WIND"?["B"]:["A","B","C","D"];
+const ex=h=>(DB.stocks[h.sym]||{}).exit;
+const exitReasons=h=>{const e=ex(h),Q=quote(h.sym);return e&&e.reasons?e.reasons:Q&&Q.px<=h.stop?["跌破預計停損價"]:[]};
+let DB=null,tab="home",mk="TW",sel=null,MSG=null;
+/* GitHub 寫回:直接修改 repo 內的 holdings.json */
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+function gh(){let o="",r="";if(typeof location!=="undefined"&&location.hostname.endsWith(".github.io")){o=location.hostname.split(".")[0];r=location.pathname.split("/")[1]||""}
+return{o:LS.get("gh_o")||o,r:LS.get("gh_r")||r,b:LS.get("gh_b")||"main",t:LS.get("gh_t")||""}}
+const b64e=s=>{let b="";new TextEncoder().encode(s).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")),c=>c.charCodeAt(0)));
+async function api(path,opt={}){const g=gh();if(!g.t||!g.o||!g.r)throw new Error("請先在總覽頁最下方設定 GitHub 連線(帳號、repo 與存取權杖)");
+const res=await fetch(`https://api.github.com/repos/${g.o}/${g.r}/${path}`,{...opt,headers:{Authorization:`Bearer ${g.t}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"}});
+if(!res.ok){const e=new Error(res.status===401?"權杖無效或已過期":res.status===403||res.status===404?"沒有權限或找不到 repo,請檢查權杖權限與 repo 名稱":`GitHub 回應 ${res.status}`);e.status=res.status;throw e}
+return res.status===204?null:res.json()}
+async function readCfg(){const j=await api(`contents/holdings.json?ref=${encodeURIComponent(gh().b)}`);const cfg=JSON.parse(b64d(j.content));cfg.holdings=cfg.holdings||[];cfg.watchlist=cfg.watchlist||[];return{cfg,sha:j.sha}}
+async function mutate(fn,msg){for(let k=0;k<2;k++){const{cfg,sha}=await readCfg();fn(cfg);
+try{await api("contents/holdings.json",{method:"PUT",body:JSON.stringify({message:msg,content:b64e(JSON.stringify(cfg,null,2)+"\n"),sha,branch:gh().b})});return cfg}catch(e){if((e.status!==409&&e.status!==422)||k)throw e}}}
+const dispatch=()=>api("actions/workflows/update-data.yml/dispatches",{method:"POST",body:JSON.stringify({ref:gh().b})}).then(()=>true).catch(()=>false);
+const say=(t,w)=>{MSG={t,w}};
+function msgHtml(){const m=MSG;MSG=null;return m?`<div class="note${m.w?" w":""}">${esc(m.t)}</div>`:""}
+async function run(fn,needData,okText){try{const cfg=await fn();DB.holdings=cfg.holdings;DB.watchlist=cfg.watchlist;let t=okText||"已儲存到 GitHub。";
+if(needData)t+=(await dispatch())?" 已觸發資料更新,約 1 到 2 分鐘後重新整理即可看到價格與線圖。":" 新個股的價格資料會在下次排程更新後出現,也可以到 Actions 手動執行 update-data。";say(t)}catch(e){say("儲存失敗:"+e.message,1)}render()}
+function editor(sym,h){const inW=DB.watchlist.some(w=>w.sym===sym),v=k=>h&&h[k]!=null?esc(h[k]):"";
+return `<div class="card"><b>${h?"編輯持股":"加入持股"}</b><div class="ed"><div><label>名稱</label><input id="e_n" value="${esc(nameOf(sym))}"></div><div><label>股數</label><input id="e_sh" type="number" step="any" value="${v("shares")}"></div><div><label>成本價</label><input id="e_cost" type="number" step="any" value="${v("cost")}"></div><div><label>預計停損價</label><input id="e_stop" type="number" step="any" value="${v("stop")}"></div><div><label>預計停利價</label><input id="e_tp" type="number" step="any" value="${v("tp")}"></div><div><label>策略</label><select id="e_st"><option value="">未指定</option>${["A","B","C","D"].map(k=>`<option value="${k}"${h&&h.strategy===k?" selected":""}>${k}・${ST[k]}</option>`).join("")}</select></div><div><label>進場日期</label><input id="e_ed" type="date" value="${v("entry_date")}"></div><div class="f"><label>買進原因</label><textarea id="e_why" rows="2">${v("why")}</textarea></div><div class="f"><label>出場規則</label><input id="e_rule" value="${v("rule")}"></div></div><div class="row" style="margin-top:12px"><button class="btn p" id="sv">儲存到 GitHub</button>${h?`<button class="btn" id="rm">移除持股</button>`:inW?`<button class="btn" id="rmw">移除觀察</button>`:""}</div><div class="mu" style="margin-top:8px">儲存會直接修改 repo 裡的 holdings.json。策略 D 的時間停損、進場日低點,以及放風箏階段的最高損益,都需要填進場日期才算得準。</div></div>`}
+const watchForm=()=>`<div class="card"><b>新增觀察個股</b><div class="mu" style="margin:6px 0">加入後就能搜尋。台股 4 碼數字預設為上市(.TW),上櫃請輸入 .TWO,例如 6488.TWO。</div><div class="ed"><div><label>代號</label><input id="w_s" placeholder="2454 或 NVDA"></div><div><label>名稱(選填)</label><input id="w_n" placeholder="聯發科"></div></div><button class="btn p" id="aw" style="margin-top:10px">加入觀察清單</button></div>`;
+function settings(){const g=gh();return `<div class="card"><b>GitHub 連線(編輯持股用)</b><div class="mu" style="margin:6px 0">權杖只存在這個瀏覽器。請建立只限這個 repo 的 fine-grained token:Contents 設為 Read and write;Actions 也設為 Read and write 的話,新增個股後會自動觸發資料更新。</div><div class="ed"><div><label>帳號</label><input id="g_o" value="${esc(g.o)}"></div><div><label>Repo</label><input id="g_r" value="${esc(g.r)}"></div><div><label>分支</label><input id="g_b" value="${esc(g.b)}"></div><div><label>存取權杖</label><input id="g_t" type="password" autocomplete="off" placeholder="${g.t?"已設定,留白表示不變":"貼上 token"}"></div></div><div class="row" style="margin-top:10px"><button class="btn p" id="gs">儲存設定</button><button class="btn" id="gt">測試連線</button><button class="btn" id="gc">清除權杖</button></div></div>`}
+function saveHolding(){const g=i=>$("#e_"+i).value.trim(),n=i=>parseFloat(g(i));
+const prev=held(sel)||{},o={...prev,sym:sel,name:g("n")||nameOf(sel),shares:n("sh"),cost:n("cost"),stop:n("stop"),tp:n("tp"),why:g("why"),rule:g("rule"),strategy:g("st"),entry_date:g("ed")};if(!o.strategy)delete o.strategy;if(!o.entry_date)delete o.entry_date;
+if(!(o.shares>0&&o.cost>0&&o.stop>0&&o.tp>o.stop)){say("請確認股數、成本、停損、停利都有填,且停利要大於停損。",1);return render()}
+run(()=>mutate(cfg=>{const i=cfg.holdings.findIndex(h=>h.sym===o.sym);i<0?cfg.holdings.push(o):cfg.holdings[i]=o;cfg.watchlist=cfg.watchlist.filter(w=>w.sym!==o.sym)},`holdings: ${o.sym}`),!DB.stocks[o.sym]||prev.strategy!==o.strategy||prev.entry_date!==o.entry_date||prev.cost!==o.cost)}
+function removeHolding(){if(!confirm("確定移除這檔持股?"))return;const s=sel;sel=null;tab="hold";run(()=>mutate(cfg=>{cfg.holdings=cfg.holdings.filter(h=>h.sym!==s)},`holdings: remove ${s}`),false,"已移除持股。")}
+function removeWatch(){const s=sel;sel=null;tab="hold";run(()=>mutate(cfg=>{cfg.watchlist=cfg.watchlist.filter(w=>w.sym!==s)},`watchlist: remove ${s}`),false,"已移除觀察個股。")}
+function addWatch(){let s=$("#w_s").value.trim().toUpperCase();const nm=$("#w_n").value.trim();if(!s)return;if(/^\d{4,6}[A-Z]?$/.test(s))s+=".TW";
+if(held(s)||DB.watchlist.some(w=>w.sym===s)){say(s+" 已經在清單裡了。",1);return render()}
+run(()=>mutate(cfg=>cfg.watchlist.push({sym:s,name:nm||s}),`watchlist: add ${s}`),true)}
+function saveGH(){["o","r","b"].forEach(k=>{const v=$("#g_"+k).value.trim();v?LS.set("gh_"+k,v):LS.del("gh_"+k)});const t=$("#g_t").value.trim();if(t)LS.set("gh_t",t);say("已儲存連線設定。");render()}
+const clearGH=()=>{LS.del("gh_t");say("已清除權杖。");render()};
+async function testGH(){try{await readCfg();say("連線成功,可以編輯持股。")}catch(e){say("連線失敗:"+e.message,1)}render()}
+/* 資料:只讀 data/data.json(由 GitHub Actions 每日更新) */
+function quote(sym){const o=(DB.indices[sym]||DB.stocks[sym]);if(!o||!o.bars||o.bars.length<2)return null;
+const d=o.bars.map(([t,o,h,l,c,v])=>({t,o,h,l,c,v}));return{d,px:d.at(-1).c,prev:d.at(-2).c,news:o.news||[]}}
+const held=s=>DB.holdings.find(h=>h.sym===s);
+const nameOf=s=>(held(s)||DB.watchlist.find(w=>w.sym===s)||{}).name||s;
+const stat=(h,p)=>{const e=ex(h);return e&&e.state==="EXIT"?["bad","觸發出場訊號"]:p<=h.stop?["bad","已碰停損線"]:p>=h.tp*.97?["bad","接近停利"]:["","持有中"]};
+/* 圖表 */
+function kline(d,ln){const W=340,Hh=180,bw=W/d.length,m20=ma(d.map(k=>k.c),20);
+const all=d.flatMap(k=>[k.h,k.l]).concat(ln.map(l=>l.y)),lo=Math.min(...all)*.995,hi=Math.max(...all)*1.005,y=v=>4+(hi-v)/(hi-lo)*(Hh-8);
+let s=`<svg viewBox="0 0 ${W} ${Hh}">`;for(let i=1;i<4;i++)s+=`<line class="gl" x1="0" x2="${W}" y1="${Hh/4*i}" y2="${Hh/4*i}"/>`;
+d.forEach((k,i)=>{const x=i*bw+bw/2,c=k.c>=k.o?UP:DN;s+=`<line x1="${x}" x2="${x}" y1="${y(k.h)}" y2="${y(k.l)}" stroke="${c}"/><rect x="${x-bw*.32}" y="${y(Math.max(k.o,k.c))}" width="${bw*.64}" height="${Math.max(1,Math.abs(y(k.o)-y(k.c)))}" fill="${c}"/>`});
+s+=`<polyline fill="none" stroke="#e8a317" stroke-width="1.2" points="${m20.map((v,i)=>v==null?"":`${i*bw+bw/2},${y(v)}`).join(" ")}"/>`;
+ln.forEach(l=>s+=`<line x1="0" x2="${W}" y1="${y(l.y)}" y2="${y(l.y)}" stroke="${l.c}" stroke-dasharray="4 3"/><text x="${W-2}" y="${y(l.y)-2}" text-anchor="end" font-size="9" fill="${l.c}">${l.t} ${fmt(l.y)}</text>`);return s+`</svg>`}
+function vol(d){const W=340,Hh=50,bw=W/d.length,mx=Math.max(...d.map(k=>k.v))||1;return `<svg viewBox="0 0 ${W} ${Hh}">`+d.map((k,i)=>`<rect x="${i*bw+bw*.18}" y="${Hh-k.v/mx*Hh}" width="${bw*.64}" height="${k.v/mx*Hh}" fill="${k.c>=k.o?UP:DN}" opacity=".8"/>`).join("")+`</svg>`}
+function macd(f,n){const W=340,Hh=80,c=f.map(k=>k.c),e12=ema(c,12),e26=ema(c,26),dif=e12.map((v,i)=>v-e26[i]),dea=ema(dif,9),his=dif.map((v,i)=>(v-dea[i])*2);
+const D=dif.slice(-n),E=dea.slice(-n),B=his.slice(-n),mx=Math.max(...D.map(Math.abs),...E.map(Math.abs),...B.map(Math.abs))||1,bw=W/n,y=v=>Hh/2-v/mx*(Hh/2-4),pl=a=>a.map((v,i)=>`${i*bw+bw/2},${y(v)}`).join(" ");
+return `<svg viewBox="0 0 ${W} ${Hh}"><line class="gl" x1="0" x2="${W}" y1="${Hh/2}" y2="${Hh/2}"/>`+B.map((v,i)=>`<rect x="${i*bw+bw*.2}" y="${Math.min(y(v),Hh/2)}" width="${bw*.6}" height="${Math.abs(y(v)-Hh/2)}" fill="${v>=0?UP:DN}" opacity=".75"/>`).join("")+`<polyline fill="none" stroke="#3b82f6" stroke-width="1.2" points="${pl(D)}"/><polyline fill="none" stroke="#e8a317" stroke-width="1.2" points="${pl(E)}"/></svg>`}
+function spark(d,ch){d=d.slice(-40).map(k=>k.c);const lo=Math.min(...d),hi=Math.max(...d);return `<svg viewBox="0 0 340 38" preserveAspectRatio="none" style="height:38px"><polyline points="${d.map((v,i)=>`${i*340/(d.length-1)},${34-(v-lo)/(hi-lo||1)*30}`).join(" ")}" fill="none" stroke="${cc(ch)}" stroke-width="2"/></svg>`}
+/* 頁面 */
+const banner=()=>`<div class="note${DB.sample?" w":""}">${DB.sample?"目前是範例資料,執行一次 update-data 排程後會換成真實資料。":""}資料更新時間:${esc(DB.updated)}(台北時間)</div>`;
+function rgLine(m){const k=m==="TW"?[["^TWII","加權"],["^TWOII","櫃買"]]:[["^GSPC","S&P 500"]],r=k.map(([i,n])=>DB.indices[i]&&DB.indices[i].regime?`${n}${RG[DB.indices[i].regime]}`:"").filter(Boolean);
+const f=DB.indices[k[0][0]];return r.length?`<div class="mu" style="margin:-4px 2px 8px">${r.join("、")}。${RGN[f.regime]}${m==="US"?"(沿用同一套判定)":""}</div>`:""}
+function sigCard(){const rows=Object.keys(DB.stocks).map(sym=>{const sg=DB.stocks[sym].sig;if(!sg)return"";const ok=["A","B","C","D"].filter(k=>sg[k]&&sg[k].ok);if(!ok.length)return"";const al=allowed(sym);
+return `<div class="row item" data-s="${esc(sym)}" style="margin-top:8px"><span><b>${esc(nameOf(sym))}</b> <span class="mu">${esc(sym)}</span></span><span>${ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" ")}</span></div>`}).join("");
+return `<div class="card"><b>策略進場訊號</b><div class="mu" style="margin:4px 0">A 週拉回風箏、B 廉價收購、C 週趨勢風箏、D 強勢週風箏。掃描範圍是持股與觀察清單;橘色代表目前大盤風度不允許這個策略。</div>${rows||`<div class="mu">目前沒有個股符合進場條件</div>`}</div>`}
+function stratCard(sym,h){const S=DB.stocks[sym]||{},sg=S.sig,e=S.exit,r=rgOf(sym);let s=`<div class="card"><b>策略檢查</b>`;
+if(r)s+=`<div class="row" style="margin-top:8px"><span class="mu">大盤風度</span><span class="chip${r==="NO_WIND"?" bad":""}">${RG[r]}</span></div><div class="mu">${RGN[r]}</div>`;
+if(h&&h.strategy)s+=`<div style="margin-top:10px"><b>${esc(ST[h.strategy]||h.strategy)}</b>`+(e?`<div class="kv"><div><span class="mu">階段</span><b>${e.mode==="kite"?"放風箏":"防守"}</b></div><div><span class="mu">損益</span><b style="color:${cc(e.pnl)}">${sgn(e.pnl)}%</b></div><div><span class="mu">最高損益</span><b style="color:${cc(e.maxpnl)}">${sgn(e.maxpnl)}%</b></div></div>`+(e.reasons.length?`<div class="alert"><b>觸發出場條件</b>${e.reasons.map(x=>`<div style="margin-top:4px">${esc(x)}</div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有出場訊號,續抱</div>`):`<div class="mu">尚無出場評估,資料更新後顯示</div>`)+`</div>`;
+else if(h)s+=`<div class="mu" style="margin-top:10px">這檔還沒指定策略。在下方編輯持股時選擇 A 到 D,系統才會依策略規則判斷出場。</div>`;
+if(sg){s+=`<div style="margin-top:12px"><b>進場條件</b></div>`+["A","B","C","D"].map(k=>{const x=sg[k];if(!x)return"";const n=x.c.filter(c=>c[1]).length;return `<details style="margin-top:6px"><summary>${k}・${ST[k]} <span class="chip"${x.ok?"":' style="background:var(--bd);color:var(--mu)"'}>${x.ok?"符合":n+"/"+x.c.length}</span></summary><ul>${x.c.map(c=>`<li>${c[1]?"✓":"✗"} ${esc(c[0])}</li>`).join("")}</ul></details>`}).join("");
+s+=`<div class="mu" style="margin-top:8px">單日成值 ${sg.turn} 億、近 15 日均 ${sg.avg15} 億(原幣)${sg.near5?"・收盤貼近 5 日線":""}</div>`;
+if(sg.rev)s+=`<div style="margin-top:8px"><span class="mu">營收盾牌</span> <b>${LV[sg.rev.level]}</b>${sg.rev.yoy!=null?` <span class="mu">YoY ${fmt(sg.rev.yoy,1)}%</span>`:""}</div>`}
+return s+`</div>`}
+function home(){let s=banner();
+["TW","US"].forEach(m=>{s+=`<div class="sec">${m==="TW"?"台股大盤":"美股大盤"}</div>${rgLine(m)}<div class="grid">`+Object.entries(DB.indices).filter(([,x])=>x.m===m).map(([sym,x])=>{const Q=quote(sym);if(!Q)return"";const ch=(Q.px/Q.prev-1)*100,k=Q.d.at(-1);return `<div class="card" style="margin:0"><div class="mu">${esc(x.name)} ${x.regime?`<span class="chip${x.regime==="NO_WIND"?" bad":""}">${RG[x.regime]}</span>`:""}</div><div class="big">${fmt(Q.px)}</div><div style="color:${cc(ch)};font-weight:600">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</div><div class="mu">高 ${fmt(k.h,0)}・低 ${fmt(k.l,0)}</div>${spark(Q.d,ch)}</div>`}).join("")+`</div>`});
+s+=`<div class="sec">持股損益</div><div class="grid">`+["TW","US"].map(m=>{let c=0,v=0;DB.holdings.forEach(h=>{const Q=quote(h.sym);if(mkt(h.sym)===m&&Q){c+=h.cost*h.shares;v+=Q.px*h.shares}});const pl=v-c;return `<div class="card" style="margin:0"><div class="mu">${m==="TW"?"台股":"美股"}市值</div><div class="big">${cur(m)}${fmt(v,0)}</div><div style="color:${cc(pl)};font-weight:600">${c?`${sgn(pl)} (${sgn(pl/c*100)}%)`:"尚無持股"}</div></div>`}).join("")+`</div>`;
+const hit=DB.holdings.map(h=>({h,r:exitReasons(h)})).filter(x=>x.r.length);
+return s+sigCard()+`<div class="card" style="margin-top:14px"><div class="row"><b>持股出場檢查</b><span class="mu">${DB.holdings.length} 檔持股</span></div>`+(hit.length?`<div class="alert"><b>已觸發出場條件</b>${hit.map(({h,r})=>`<div style="margin-top:6px"><b>${esc(h.name)}</b> <span class="mu">${esc(r.join("、"))}</span></div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有觸發出場條件</div>`)+`</div>`+settings()}
+function list(){const L=DB.holdings.filter(h=>mkt(h.sym)===mk);
+let s=banner()+`<div class="seg"><button data-m="TW" class="${mk==="TW"?"on":""}">台股</button><button data-m="US" class="${mk==="US"?"on":""}">美股</button></div>`;
+if(!L.length)s+=`<div class="card mu">這個市場還沒有持股,請編輯 holdings.json。</div>`;
+L.forEach(h=>{const Q=quote(h.sym);if(!Q)return s+=`<div class="card item" data-s="${esc(h.sym)}"><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)} 尚無資料,點開可編輯</span></div>`;
+const pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
+s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span class="chip ${k}">${t}</span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div></div>`});return s+watchForm()}
+function detail(sym){const h=held(sym),Q=quote(sym),back=`<button class="back" id="bk">← 返回</button>`;
+if(!Q)return back+`<div class="card" style="margin-top:12px">${esc(nameOf(sym))} 目前沒有資料,請確認代號後重新執行 update-data。</div>`+editor(sym,h);
+const d=Q.d.slice(-60),ch=(Q.px/Q.prev-1)*100,m=mkt(sym);
+let s=back+`<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(nameOf(sym))} <span class="mu">${esc(sym)}</span></b>${h?`<span class="chip ${stat(h,Q.px)[0]}">${stat(h,Q.px)[1]}</span>`:`<span class="chip">觀察中</span>`}</div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div>`;
+if(h){const pl=(Q.px-h.cost)*h.shares;s+=`<div class="kv"><div><span class="mu">持股成本</span><b>${fmt(h.cost)}</b></div><div><span class="mu">持有股數</span><b>${fmt(h.shares,0)}</b></div><div><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(m)}${sgn(pl)}</b></div></div>`}
+s+=`</div>`+stratCard(sym,h);
+if(h){const rg=h.tp-h.stop,pos=Math.max(0,Math.min(100,(Q.px-h.stop)/rg*100)),cp=Math.max(0,Math.min(100,(h.cost-h.stop)/rg*100));
+s+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)||"尚未填寫"}</p></div><div class="card"><b>停損與停利</b><div class="kv"><div><span class="mu">預計停損</span><b style="color:var(--st)">${fmt(h.stop)}</b></div><div><span class="mu">預計停利</span><b style="color:var(--tpc)">${fmt(h.tp)}</b></div><div><span class="mu">現價位置</span><b>${fmt(pos,0)}%</b></div></div><div class="bar"><i style="left:calc(${cp}% - 2px);opacity:.35"></i><i style="left:calc(${pos}% - 2px)"></i></div><div class="row mu"><span>停損</span><span>淡色為成本</span><span>停利</span></div><p class="mu" style="margin:10px 0 0">出場規則:${esc(h.rule)||"尚未填寫"}</p></div>`}
+s+=`<div class="card"><b>技術線圖</b> <span class="mu">日 K・近 60 日・黃線 MA20</span>${kline(d,h?[{y:h.cost,c:"#3b82f6",t:"成本"},{y:h.stop,c:"var(--st)",t:"停損"},{y:h.tp,c:"var(--tpc)",t:"停利"}]:[])}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(Q.d,d.length)}</div>`;
+return s+`<div class="card"><b>重大新聞</b>${Q.news.length?`<ul>${Q.news.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="mu">${esc(n.pub)}</span></li>`).join("")}</ul>`:`<div class="mu" style="margin-top:6px">目前沒有相關新聞</div>`}</div>`+editor(sym,h)}
+function render(){$("#ttl").textContent=sel?"個股":tab==="home"?"總覽":"持股";
+document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
+$("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():list());
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mk=b.dataset.m;render()});
+document.querySelectorAll(".item").forEach(b=>b.onclick=()=>open(b.dataset.s));
+const on=(i,f)=>{const e=$(i);if(e)e.onclick=f};
+on("#bk",()=>{sel=null;render()});on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH)}
+function open(s){sel=s;$("#rs").innerHTML="";$("#q").value="";render();scrollTo(0,0)}
+/* 搜尋範圍:持股 + watchlist */
+function hits(v){v=v.trim().toLowerCase();if(!v)return[];const u=[...DB.holdings,...DB.watchlist.filter(w=>!held(w.sym))];return u.filter(x=>x.sym.toLowerCase().includes(v)||(x.name||"").toLowerCase().includes(v)).slice(0,8)}
+$("#q").oninput=e=>{const r=hits(e.target.value),v=e.target.value.trim();$("#rs").innerHTML=!v?"":r.length?r.map(x=>`<div data-s="${esc(x.sym)}"><b>${esc(x.sym)}</b> ${esc(x.name||"")} ${held(x.sym)?'<span class="chip">持股</span>':""}</div>`).join(""):`<div class="mu">不在追蹤清單。請把代號加進 holdings.json 的 watchlist,下次排程更新後即可搜尋。</div>`;
+document.querySelectorAll("#rs [data-s]").forEach(b=>b.onclick=()=>open(b.dataset.s))};
+$("#q").onkeydown=e=>{if(e.key==="Enter"){const r=hits(e.target.value);if(r[0])open(r[0].sym)}};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;sel=null;render();scrollTo(0,0)});
+/* 載入:data.json 放行情;持股設定優先從 GitHub 讀最新版(有設定權杖時),否則讀 holdings.json */
+(async()=>{try{const [d,hj]=await Promise.all([fetch("data/data.json?"+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}),
+(gh().t?readCfg().then(x=>x.cfg).catch(()=>null):Promise.resolve(null)).then(c=>c||fetch("holdings.json?"+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null))]);
+DB=d;if(hj){DB.holdings=hj.holdings||[];DB.watchlist=hj.watchlist||[]}DB.holdings=DB.holdings||[];DB.watchlist=DB.watchlist||[];render()}
+catch(e){$("#app").innerHTML=`<div class="card"><b>讀不到 data/data.json</b><p class="mu">請透過 GitHub Pages 或本機伺服器開啟(python -m http.server),直接雙擊檔案無法讀取。</p></div>`}})();
+</script>
+</body>
+</html>

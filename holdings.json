@@ -1,0 +1,76 @@
+{
+  "holdings": [
+    {
+      "sym": "2330.TW",
+      "name": "台積電",
+      "shares": 1000,
+      "cost": 980,
+      "stop": 940,
+      "tp": 1200,
+      "why": "AI 先進製程需求強勁;回檔至季線附近分批買進,屬長線核心部位。",
+      "rule": "收盤跌破季線出場",
+      "strategy": "A",
+      "entry_date": "2026-10-20"
+    },
+    {
+      "sym": "3443.TW",
+      "name": "創意",
+      "shares": 1000,
+      "cost": 7050,
+      "stop": 6739,
+      "tp": 8200,
+      "why": "ASIC 設計服務受惠雲端客戶訂單;以區間下緣為進場依據。",
+      "rule": "收盤跌破區間下緣出場",
+      "strategy": "A",
+      "entry_date": "2026-10-27"
+    },
+    {
+      "sym": "0050.TW",
+      "name": "元大台灣50",
+      "shares": 100,
+      "cost": 92.4,
+      "stop": 84,
+      "tp": 110,
+      "why": "ETF 長期定期定額,月 K 值落在合理區時加碼。",
+      "rule": "ETF 不設硬停損"
+    },
+    {
+      "sym": "NVDA",
+      "name": "NVIDIA",
+      "shares": 50,
+      "cost": 118.5,
+      "stop": 128,
+      "tp": 165,
+      "why": "資料中心需求持續,財報後突破盤整區。",
+      "rule": "跌破前波支撐停損",
+      "strategy": "D",
+      "entry_date": "2026-11-03"
+    },
+    {
+      "sym": "AAPL",
+      "name": "Apple",
+      "shares": 40,
+      "cost": 203,
+      "stop": 188,
+      "tp": 230,
+      "why": "現金流穩定,逢回檔布局的防禦配置。",
+      "rule": "跌破 188 停損",
+      "strategy": "B",
+      "entry_date": "2026-10-13"
+    }
+  ],
+  "watchlist": [
+    {
+      "sym": "2454.TW",
+      "name": "聯發科"
+    },
+    {
+      "sym": "6213.TW",
+      "name": "聯茂"
+    },
+    {
+      "sym": "MSFT",
+      "name": "Microsoft"
+    }
+  ]
+}
