@@ -119,6 +119,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-20"
+    },
+    {
+      "sym": "META",
+      "name": "META",
+      "shares": 4,
+      "cost": 725.16,
+      "stop": 625,
+      "tp": 1400,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-20"
     }
   ],
   "watchlist": [
