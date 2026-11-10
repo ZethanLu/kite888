@@ -53,6 +53,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-01"
+    },
+    {
+      "sym": "8150.TW",
+      "name": "南茂",
+      "shares": 135,
+      "cost": 117.55,
+      "stop": 50,
+      "tp": 200,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-12"
     }
   ],
   "watchlist": [
