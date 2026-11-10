@@ -21,18 +21,6 @@
       "tp": 110,
       "why": "ETF 長期定期定額,月 K 值落在合理區時加碼。",
       "rule": "ETF 不設硬停損"
-    },
-    {
-      "sym": "AAPL",
-      "name": "Apple",
-      "shares": 40,
-      "cost": 203,
-      "stop": 188,
-      "tp": 230,
-      "why": "現金流穩定,逢回檔布局的防禦配置。",
-      "rule": "跌破 188 停損",
-      "strategy": "B",
-      "entry_date": "2026-10-13"
     }
   ],
   "watchlist": [
