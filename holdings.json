@@ -141,6 +141,25 @@
       "why": "遇到倒楣事大跌。",
       "rule": "",
       "entry_date": "2026-11-10"
+    },
+    {
+      "sym": "3675.TWO",
+      "name": "德微",
+      "shares": 25,
+      "cost": 310.92,
+      "stop": 200,
+      "tp": 355,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-06-25",
+      "rules": {
+        "stop": [
+          "m_osc_down"
+        ],
+        "tp": [
+          "w_close_down"
+        ]
+      }
     }
   ],
   "watchlist": [
@@ -151,10 +170,6 @@
     {
       "sym": "MSFT",
       "name": "Microsoft"
-    },
-    {
-      "sym": "3675.TWO",
-      "name": "德微"
     }
   ]
 }
