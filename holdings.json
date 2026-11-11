@@ -160,6 +160,25 @@
           "w_close_down"
         ]
       }
+    },
+    {
+      "sym": "5425.TWO",
+      "name": "台半",
+      "shares": 81,
+      "cost": 106.93,
+      "stop": 60,
+      "tp": 136,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-06-25",
+      "rules": {
+        "stop": [
+          "m_osc_down"
+        ],
+        "tp": [
+          "w_close_down"
+        ]
+      }
     }
   ],
   "watchlist": [
