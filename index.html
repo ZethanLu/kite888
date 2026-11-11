@@ -145,8 +145,8 @@ return `<div class="card"><b>策略進場訊號</b><div class="mu" style="margin
 const lines=(h,e)=>{if(!h)return[];const L=[{y:h.cost,c:"#3b82f6",t:"成本"},{y:h.stop,c:"var(--st)",t:"停損"},{y:h.tp,c:"var(--tpc)",t:"停利"}],dy=e&&e.dyn;if(dy&&dy.stop)L.push({y:dy.stop.price,c:"var(--st)",t:"動態停損"});if(dy&&dy.tp)L.push({y:dy.tp.price,c:"var(--tpc)",t:"動態停利"});return L};
 const dynBlock=dy=>{const li=(k,t)=>dy.custom[k].length?`<div style="margin-top:8px"><b>${t}</b></div><ul style="list-style:none;padding:0">${dy.custom[k].map(x=>`<li>${!x.active?'<span class="mu">未啟用</span>':x.hit?'<b style="color:var(--st)">已觸發</b>':'<span class="mu">未觸發</span>'} ${esc(x.label)}${x.level!=null?` <span class="mu">(${fmt(x.level)})</span>`:""}</li>`).join("")}</ul>`:"";
 return `<div style="margin-top:12px"><b>自訂動態停損停利</b><div class="mu">停利條件在獲利達 ${dy.thr}% 後啟用,目前${dy.kite?"已啟用":"尚未啟用"}。</div><div class="kv"><div><span class="mu">動態停損價</span><b style="color:var(--st)">${dy.stop?fmt(dy.stop.price):"—"}</b></div><div><span class="mu">動態停利價</span><b style="color:var(--tpc)">${dy.tp?fmt(dy.tp.price):"—"}</b></div><div><span class="mu">獲利門檻</span><b>${dy.thr}%</b></div></div>${dy.stop?`<div class="mu" style="margin-top:6px">動態停損價取自:${esc(dy.stop.by)}</div>`:""}${dy.tp?`<div class="mu">動態停利價取自:${esc(dy.tp.by)}</div>`:""}${li("stop","停損條件")}${li("tp","停利條件")}</div>`};
-const goBack=()=>{if(typeof history!=="undefined"&&history.state&&history.state.d)history.back();else{sel=null;render()}};
-try{window.onpopstate=()=>{sel=null;render()}}catch(e){}
+const goBack=()=>{const st=typeof history!=="undefined"&&history.state;if(sel){if(st&&st.d)history.back();else{sel=null;render()}}else if(tab==="hold"){if(st&&st.t)history.back();else{tab="home";render()}}};
+try{window.onpopstate=()=>{if(sel)sel=null;else if(tab==="hold")tab="home";render()}}catch(e){}
 function stratCard(sym,h){const S=DB.stocks[sym]||{},sg=S.sig,e=S.exit,r=rgOf(sym);let s=`<div class="card"><b>策略檢查</b>`;
 if(r)s+=`<div class="row" style="margin-top:8px"><span class="mu">大盤風度</span><span class="chip${r==="NO_WIND"?" bad":""}">${RG[r]}</span></div><div class="mu">${RGN[r]}</div>`;
 if(h&&h.strategy)s+=`<div style="margin-top:10px"><b>${esc(ST[h.strategy]||h.strategy)}</b>`+(e?`<div class="kv"><div><span class="mu">階段</span><b>${e.mode==="kite"?"放風箏":"防守"}</b></div><div><span class="mu">損益</span><b style="color:${cc(e.pnl)}">${sgn(e.pnl)}%</b></div><div><span class="mu">最高損益</span><b style="color:${cc(e.maxpnl)}">${sgn(e.maxpnl)}%</b></div></div>`+(e.reasons.length?`<div class="alert"><b>觸發出場條件</b>${e.reasons.map(x=>`<div style="margin-top:4px">${esc(x)}</div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有出場訊號,續抱</div>`):`<div class="mu">尚無出場評估,資料更新後顯示</div>`)+`</div>`;
@@ -168,7 +168,7 @@ if(!L.length)s+=`<div class="card mu">這個市場還沒有持股,請編輯 hold
 L.forEach(h=>{const Q=quote(h.sym);if(!Q)return s+=`<div class="card item" data-s="${esc(h.sym)}"><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)} 尚無資料,點開可編輯</span></div>`;
 const pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
 s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span><span class="chip ${k}">${t}</span> <button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div></div>`});return s+watchForm()}
-function detail(sym){const h=held(sym),Q=quote(sym),back=`<button class="back" id="bk">← 返回</button>`;
+function detail(sym){const h=held(sym),Q=quote(sym),back="";
 if(!Q)return back+`<div class="card" style="margin-top:12px">${esc(nameOf(sym))} 目前還沒有這檔的行情資料。填好下方資料並儲存後會觸發更新,約 1 到 2 分鐘後出現線圖。</div>`+editor(sym,h);
 const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,m=mkt(sym);
 let s=back+`<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(nameOf(sym))} <span class="mu">${esc(sym)}</span></b><span>${h?`<span class="chip ${stat(h,Q.px)[0]}">${stat(h,Q.px)[1]}</span>`:`<span class="chip">觀察中</span>`} <button class="btn" id="goedit" style="padding:2px 12px">${h?"編輯":"加入持股"}</button></span></div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div>`;
@@ -179,14 +179,14 @@ s+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)|
 s+=`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,lines(h,h?ex(h):null))}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
 return s+`<div class="card"><b>重大新聞</b>${Q.news.length?`<ul>${Q.news.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="mu">${esc(n.pub)}</span></li>`).join("")}</ul>`:`<div class="mu" style="margin-top:6px">目前沒有相關新聞</div>`}</div>`+editor(sym,h)}
 function render(){$("#ttl").textContent=sel?"個股":tab==="home"?"總覽":"持股";
-const hb=$("#hb");if(hb){hb.hidden=!sel;hb.textContent="← 返回"+(tab==="home"?"總覽":"持股")}
+const hb=$("#hb");if(hb){hb.hidden=!(sel||tab==="hold");hb.textContent=sel?"← 返回"+(tab==="home"?"總覽":"持股"):"← 返回總覽"}
 document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
 $("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():list());
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mk=b.dataset.m;render()});
 document.querySelectorAll(".item").forEach(b=>b.onclick=()=>open(b.dataset.s));
 const on=(i,f)=>{const e=$(i);if(e)e.onclick=f};
 on("#bk",goBack);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH);
-on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{tab="hold";sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
+on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{try{history.pushState({t:1},"")}catch(e){}tab="hold";sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
 document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{GOEDIT=true});
 document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;render()});
 if(GOEDIT&&sel){GOEDIT=false;const e=$("#edcard");if(e)e.scrollIntoView()}}
@@ -196,7 +196,7 @@ function hits(v){v=v.trim().toLowerCase();if(!v)return[];const u=[...DB.holdings
 $("#q").oninput=e=>{const r=hits(e.target.value),v=e.target.value.trim();$("#rs").innerHTML=!v?"":r.length?r.map(x=>`<div data-s="${esc(x.sym)}"><b>${esc(x.sym)}</b> ${esc(x.name||"")} ${held(x.sym)?'<span class="chip">持股</span>':""}</div>`).join(""):`<div class="mu">不在追蹤清單。請把代號加進 holdings.json 的 watchlist,下次排程更新後即可搜尋。</div>`;
 document.querySelectorAll("#rs [data-s]").forEach(b=>b.onclick=()=>open(b.dataset.s))};
 $("#q").onkeydown=e=>{if(e.key==="Enter"){const r=hits(e.target.value);if(r[0])open(r[0].sym)}};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;sel=null;render();scrollTo(0,0)});
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==="hold"&&tab!=="hold"){try{history.pushState({t:1},"")}catch(e){}}tab=t;sel=null;render();scrollTo(0,0)});
 /* 載入:data.json 放行情;持股設定優先從 GitHub 讀最新版(有設定權杖時),否則讀 holdings.json */
 (async()=>{try{const [d,hj]=await Promise.all([fetch("data/data.json?"+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}),
 (gh().t?readCfg().then(x=>x.cfg).catch(()=>null):Promise.resolve(null)).then(c=>c||fetch("holdings.json?"+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null))]);
