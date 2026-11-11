@@ -1,10 +1,7 @@
 name: update-data
 
 on:
-  schedule:
-    - cron: "10 7 * * 1-5"   # 台北時間 15:10(UTC 07:10),週一到週五
-    - cron: "45 7 * * 1-5"   # 備援:只有在當天還沒更新時才會抓
-  workflow_dispatch:
+  workflow_dispatch:   # 只能手動執行(網頁上的「更新資料」按鈕或 Actions 頁面的 Run workflow)
 
 permissions:
   contents: write
@@ -24,7 +21,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Fetch data
-        run: python scripts/fetch_data.py ${{ github.event.schedule == '45 7 * * 1-5' && '--if-stale' || '' }}
+        run: python scripts/fetch_data.py
       - name: Commit data
         run: |
           git config user.name "github-actions[bot]"
