@@ -43,6 +43,7 @@ select{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:
 details summary{cursor:pointer}
 input[type=checkbox]{width:auto;margin-right:6px}
 .ed .ck label{display:block;font-size:14px;color:var(--tx);margin:4px 0}.ed .ck>label:first-child{font-size:12px;color:var(--mu);margin:0 0 2px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 4px;text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:400;font-size:12px}tr+tr td{border-top:1px solid var(--bd)}
 .btn{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
 .btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
@@ -52,7 +53,7 @@ textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radiu
 <body>
 <header><span class="logo">STOCK WEB</span><b id="ttl">總覽</b><button class="back" id="hb" hidden style="margin-left:auto">← 返回</button></header>
 <main><div class="card" style="padding:10px"><input id="q" placeholder="搜尋個股:代號或名稱,例如 2330、台積電、NVDA" autocomplete="off"><div class="rs" id="rs"></div></div><div id="app"></div></main>
-<nav><button data-t="home" class="on">總覽</button><button data-t="hold">持股</button></nav>
+<nav><button data-t="home" class="on">總覽</button><button data-t="hold">持股</button><button data-t="watch">觀察</button></nav>
 <script>
 const $=s=>document.querySelector(s);
 const fmt=(n,d=2)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -62,7 +63,7 @@ const ma=(a,n)=>a.map((_,i)=>i<n-1?null:a.slice(i-n+1,i+1).reduce((x,y)=>x+y,0)/
 const mkt=s=>/\.TWO?$|^\^TW/.test(s)?"TW":"US",cur=m=>m==="TW"?"NT$":"US$";
 const cc=v=>v>=0?"var(--r)":"var(--g)",sgn=v=>(v>=0?"+":"−")+fmt(Math.abs(v));
 const UP="var(--r)",DN="var(--g)";
-const N={d:60,w:52,m:36},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d";
+const N={d:60,w:52,m:36},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d",RV=null;
 const RS={"stop": [["m_osc_down", "月 MACD 柱體比上月差"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["w_close_down", "週收盤比上週差(週五判斷)"], ["below_w5", "收盤跌破 5 週均線"], ["below_ma20", "收盤跌破 20 日線"], ["below_ma60", "收盤跌破 60 日線(季線)"], ["below_ma120", "收盤跌破 120 日線(半年線)"], ["below_prev_wlow", "收盤跌破上週最低點"], ["below_entry_low", "收盤跌破進場日低點"], ["loss5", "虧損達 -5%"]], "tp": [["w_close_down", "週收盤比上週差(週五判斷)"], ["w_high_fail", "當週最高價未創前週新高(週五判斷)"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["m_osc_down", "月 MACD 柱體比上月差"], ["below_ma5", "收盤跌破 5 日線"], ["below_w5", "收盤跌破 5 週均線"], ["fall_back", "獲利跌回門檻(保本)"]]};
 const RG={STRONG_WIND:"強風・易漲",NO_WIND:"無風・易跌",CHOPPY:"亂流・震盪"};
 const RGN={STRONG_WIND:"老闆型、上班族型全策略可用",NO_WIND:"僅限老闆型「廉價收購」,上班族型暫停",CHOPPY:"老闆型分 5 筆以上,上班族型降級或觀望"};
@@ -142,11 +143,27 @@ return `<div class="row item" data-s="${esc(h.sym)}" style="margin-top:10px;padd
 function sigCard(){const rows=Object.keys(DB.stocks).map(sym=>{const sg=DB.stocks[sym].sig;if(!sg)return"";const ok=["A","B","C","D"].filter(k=>sg[k]&&sg[k].ok);if(!ok.length)return"";const al=allowed(sym);
 return `<div class="row item" data-s="${esc(sym)}" style="margin-top:8px"><span><b>${esc(nameOf(sym))}</b> <span class="mu">${esc(sym)}</span></span><span>${ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" ")}</span></div>`}).join("");
 return `<div class="card"><b>策略進場訊號</b><div class="mu" style="margin:4px 0">A 週拉回風箏、B 廉價收購、C 週趨勢風箏、D 強勢週風箏。掃描範圍是持股與觀察清單;橘色代表目前大盤風度不允許這個策略。</div>${rows||`<div class="mu">目前沒有個股符合進場條件</div>`}</div>`}
+const pct=v=>v==null?"—":`<span style="color:${cc(v)}">${sgn(v)}%</span>`;
+const revLine=sym=>{const r=(DB.stocks[sym]||{}).rev;if(!r)return"";const k=r.m&&r.m.length?"m":r.q&&r.q.length?"q":null;if(!k)return"";const x=r[k][r[k].length-1];
+return `<div class="mu" style="margin-top:6px">${k==="m"?"月營收":"季營收"} ${esc(x.p)}:YoY ${pct(x.yoy)}・${k==="m"?"MoM "+pct(x.mom):"QoQ "+pct(x.qoq)}</div>`};
+function revCard(sym){const r=(DB.stocks[sym]||{}).rev,ks=r?[["m","月"],["q","季"],["y","年"]].filter(([k])=>r[k]&&r[k].length):[];
+if(!ks.length)return `<div class="card"><b>營收</b><div class="mu" style="margin-top:6px">${mkt(sym)==="US"?"尚無財報資料(美股只有季、年財報,資料更新後顯示)":"尚無營收資料,資料更新後顯示"}</div></div>`;
+const k=ks.some(x=>x[0]===RV)?RV:ks[0][0],rows=r[k].slice(-{m:12,q:8,y:7}[k]).reverse(),h2={m:"MoM%",q:"QoQ%",y:""}[k];
+return `<div class="card"><div class="row"><b>營收</b>${r.high?`<span class="chip">最新月營收創歷史新高</span>`:""}</div><div class="seg" style="margin:8px 0">${ks.map(([i,n])=>`<button data-rv="${i}" class="${k===i?"on":""}">${n}</button>`).join("")}</div><table><tr><th>期間</th><th>營收(億)</th><th>YoY%</th>${h2?`<th>${h2}</th>`:""}</tr>${rows.map(x=>`<tr><td>${esc(x.p)}</td><td>${fmt(x.rev)}</td><td>${pct(x.yoy)}</td>${h2?`<td>${pct(x[k==="m"?"mom":"qoq"])}</td>`:""}</tr>`).join("")}</table><div class="mu" style="margin-top:6px">YoY 為對去年同期;${k==="m"?"MoM 為對上月":k==="q"?"QoQ 為對上一季":"年度只列 YoY"}。單位:億元(原幣)。${mkt(sym)==="US"?"美股不公布月營收。":""}</div></div>`}
+function newsCard(sym,Q){const li=a=>a.length?`<ul>${a.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="mu">${esc(n.pub||"")}${n.d?"・"+esc(n.d):""}</span></li>`).join("")}</ul>`:`<div class="mu" style="margin-top:6px">目前沒有相關新聞</div>`,tw=(DB.stocks[sym]||{}).news_tw||[];
+return `<div class="card"><b>重大新聞</b>${mkt(sym)==="TW"?`<div class="mu" style="margin-top:8px">台灣新聞</div>${li(tw)}<div class="mu" style="margin-top:10px">國際新聞(Yahoo)</div>`:""}${li(Q.news)}</div>`}
+function watchPage(){const L=DB.watchlist.filter(w=>!held(w.sym));let s=banner()+watchForm();
+if(!L.length)s+=`<div class="card mu">觀察清單是空的,用上方表單加入個股。</div>`;
+L.forEach(w=>{const Q=quote(w.sym),sg=(DB.stocks[w.sym]||{}).sig;
+if(!Q){s+=`<div class="card item" data-s="${esc(w.sym)}"><b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)} 尚無資料,更新後顯示</span></div>`;return}
+const ch=(Q.px/Q.prev-1)*100,al=allowed(w.sym),ok=sg?["A","B","C","D"].filter(k=>sg[k]&&sg[k].ok):[];
+s+=`<div class="card item" data-s="${esc(w.sym)}"><div class="row"><b>${esc(w.name||w.sym)} <span class="mu">${esc(w.sym)}</span></b><span>${ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" ")}</span></div><div class="row" style="margin-top:8px"><span class="big" style="font-size:20px">${fmt(Q.px)}</span><b style="color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</b></div>${spark(Q.d,ch)}${revLine(w.sym)}</div>`});
+return s}
 const lines=(h,e)=>{if(!h)return[];const L=[{y:h.cost,c:"#3b82f6",t:"成本"},{y:h.stop,c:"var(--st)",t:"停損"},{y:h.tp,c:"var(--tpc)",t:"停利"}],dy=e&&e.dyn;if(dy&&dy.stop)L.push({y:dy.stop.price,c:"var(--st)",t:"動態停損"});if(dy&&dy.tp)L.push({y:dy.tp.price,c:"var(--tpc)",t:"動態停利"});return L};
 const dynBlock=dy=>{const li=(k,t)=>dy.custom[k].length?`<div style="margin-top:8px"><b>${t}</b></div><ul style="list-style:none;padding:0">${dy.custom[k].map(x=>`<li>${!x.active?'<span class="mu">未啟用</span>':x.hit?'<b style="color:var(--st)">已觸發</b>':'<span class="mu">未觸發</span>'} ${esc(x.label)}${x.level!=null?` <span class="mu">(${fmt(x.level)})</span>`:""}</li>`).join("")}</ul>`:"";
 return `<div style="margin-top:12px"><b>自訂動態停損停利</b><div class="mu">停利條件在獲利達 ${dy.thr}% 後啟用,目前${dy.kite?"已啟用":"尚未啟用"}。</div><div class="kv"><div><span class="mu">動態停損價</span><b style="color:var(--st)">${dy.stop?fmt(dy.stop.price):"—"}</b></div><div><span class="mu">動態停利價</span><b style="color:var(--tpc)">${dy.tp?fmt(dy.tp.price):"—"}</b></div><div><span class="mu">獲利門檻</span><b>${dy.thr}%</b></div></div>${dy.stop?`<div class="mu" style="margin-top:6px">動態停損價取自:${esc(dy.stop.by)}</div>`:""}${dy.tp?`<div class="mu">動態停利價取自:${esc(dy.tp.by)}</div>`:""}${li("stop","停損條件")}${li("tp","停利條件")}</div>`};
-const goBack=()=>{const st=typeof history!=="undefined"&&history.state;if(sel){if(st&&st.d)history.back();else{sel=null;render()}}else if(tab==="hold"){if(st&&st.t)history.back();else{tab="home";render()}}};
-try{window.onpopstate=()=>{if(sel)sel=null;else if(tab==="hold")tab="home";render()}}catch(e){}
+const goBack=()=>{const st=typeof history!=="undefined"&&history.state;if(sel){if(st&&st.d)history.back();else{sel=null;render()}}else if(tab!=="home"){if(st&&st.t)history.back();else{tab="home";render()}}};
+try{window.onpopstate=()=>{if(sel)sel=null;else if(tab!=="home")tab="home";render()}}catch(e){}
 function stratCard(sym,h){const S=DB.stocks[sym]||{},sg=S.sig,e=S.exit,r=rgOf(sym);let s=`<div class="card"><b>策略檢查</b>`;
 if(r)s+=`<div class="row" style="margin-top:8px"><span class="mu">大盤風度</span><span class="chip${r==="NO_WIND"?" bad":""}">${RG[r]}</span></div><div class="mu">${RGN[r]}</div>`;
 if(h&&h.strategy)s+=`<div style="margin-top:10px"><b>${esc(ST[h.strategy]||h.strategy)}</b>`+(e?`<div class="kv"><div><span class="mu">階段</span><b>${e.mode==="kite"?"放風箏":"防守"}</b></div><div><span class="mu">損益</span><b style="color:${cc(e.pnl)}">${sgn(e.pnl)}%</b></div><div><span class="mu">最高損益</span><b style="color:${cc(e.maxpnl)}">${sgn(e.maxpnl)}%</b></div></div>`+(e.reasons.length?`<div class="alert"><b>觸發出場條件</b>${e.reasons.map(x=>`<div style="margin-top:4px">${esc(x)}</div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有出場訊號,續抱</div>`):`<div class="mu">尚無出場評估,資料更新後顯示</div>`)+`</div>`;
@@ -167,7 +184,7 @@ let s=banner()+newHoldForm()+`<div class="seg"><button data-m="TW" class="${mk==
 if(!L.length)s+=`<div class="card mu">這個市場還沒有持股,請編輯 holdings.json。</div>`;
 L.forEach(h=>{const Q=quote(h.sym);if(!Q)return s+=`<div class="card item" data-s="${esc(h.sym)}"><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)} 尚無資料,點開可編輯</span></div>`;
 const pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
-s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span><span class="chip ${k}">${t}</span> <button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div></div>`});return s+watchForm()}
+s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span><span class="chip ${k}">${t}</span> <button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div>${revLine(h.sym)}</div>`});return s}
 function detail(sym){const h=held(sym),Q=quote(sym),back="";
 if(!Q)return back+`<div class="card" style="margin-top:12px">${esc(nameOf(sym))} 目前還沒有這檔的行情資料。填好下方資料並儲存後會觸發更新,約 1 到 2 分鐘後出現線圖。</div>`+editor(sym,h);
 const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,m=mkt(sym);
@@ -177,11 +194,11 @@ s+=`</div>`+stratCard(sym,h);
 if(h){const rg=h.tp-h.stop,pos=Math.max(0,Math.min(100,(Q.px-h.stop)/rg*100)),cp=Math.max(0,Math.min(100,(h.cost-h.stop)/rg*100));
 s+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)||"尚未填寫"}</p></div><div class="card"><b>停損與停利</b><div class="kv"><div><span class="mu">預計停損</span><b style="color:var(--st)">${fmt(h.stop)}</b></div><div><span class="mu">預計停利</span><b style="color:var(--tpc)">${fmt(h.tp)}</b></div><div><span class="mu">現價位置</span><b>${fmt(pos,0)}%</b></div></div><div class="bar"><i style="left:calc(${cp}% - 2px);opacity:.35"></i><i style="left:calc(${pos}% - 2px)"></i></div><div class="row mu"><span>停損</span><span>淡色為成本</span><span>停利</span></div><p class="mu" style="margin:10px 0 0">出場規則:${esc(h.rule)||"尚未填寫"}</p></div>`}
 s+=`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,lines(h,h?ex(h):null))}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
-return s+`<div class="card"><b>重大新聞</b>${Q.news.length?`<ul>${Q.news.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="mu">${esc(n.pub)}</span></li>`).join("")}</ul>`:`<div class="mu" style="margin-top:6px">目前沒有相關新聞</div>`}</div>`+editor(sym,h)}
-function render(){$("#ttl").textContent=sel?"個股":tab==="home"?"總覽":"持股";
-const hb=$("#hb");if(hb){hb.hidden=!(sel||tab==="hold");hb.textContent=sel?"← 返回"+(tab==="home"?"總覽":"持股"):"← 返回總覽"}
+return s+revCard(sym)+newsCard(sym,Q)+editor(sym,h)}
+function render(){$("#ttl").textContent=sel?"個股":{home:"總覽",hold:"持股",watch:"觀察清單"}[tab];
+const hb=$("#hb");if(hb){hb.hidden=!(sel||tab!=="home");hb.textContent=sel?"← 返回"+{home:"總覽",hold:"持股",watch:"觀察清單"}[tab]:"← 返回總覽"}
 document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
-$("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():list());
+$("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():tab==="watch"?watchPage():list());
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mk=b.dataset.m;render()});
 document.querySelectorAll(".item").forEach(b=>b.onclick=()=>open(b.dataset.s));
 const on=(i,f)=>{const e=$(i);if(e)e.onclick=f};
@@ -189,6 +206,7 @@ on("#bk",goBack);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);
 on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{try{history.pushState({t:1},"")}catch(e){}tab="hold";sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
 document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{GOEDIT=true});
 document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;render()});
+document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{RV=b.dataset.rv;render()});
 if(GOEDIT&&sel){GOEDIT=false;const e=$("#edcard");if(e)e.scrollIntoView()}}
 function open(s){sel=s;$("#rs").innerHTML="";$("#q").value="";try{history.pushState({d:1},"")}catch(e){}render();scrollTo(0,0)}
 /* 搜尋範圍:持股 + watchlist */
@@ -196,7 +214,7 @@ function hits(v){v=v.trim().toLowerCase();if(!v)return[];const u=[...DB.holdings
 $("#q").oninput=e=>{const r=hits(e.target.value),v=e.target.value.trim();$("#rs").innerHTML=!v?"":r.length?r.map(x=>`<div data-s="${esc(x.sym)}"><b>${esc(x.sym)}</b> ${esc(x.name||"")} ${held(x.sym)?'<span class="chip">持股</span>':""}</div>`).join(""):`<div class="mu">不在追蹤清單。請把代號加進 holdings.json 的 watchlist,下次排程更新後即可搜尋。</div>`;
 document.querySelectorAll("#rs [data-s]").forEach(b=>b.onclick=()=>open(b.dataset.s))};
 $("#q").onkeydown=e=>{if(e.key==="Enter"){const r=hits(e.target.value);if(r[0])open(r[0].sym)}};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t==="hold"&&tab!=="hold"){try{history.pushState({t:1},"")}catch(e){}}tab=t;sel=null;render();scrollTo(0,0)});
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t!=="home"&&tab==="home"){try{history.pushState({t:1},"")}catch(e){}}tab=t;sel=null;render();scrollTo(0,0)});
 /* 載入:data.json 放行情;持股設定優先從 GitHub 讀最新版(有設定權杖時),否則讀 holdings.json */
 (async()=>{try{const [d,hj]=await Promise.all([fetch("data/data.json?"+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}),
 (gh().t?readCfg().then(x=>x.cfg).catch(()=>null):Promise.resolve(null)).then(c=>c||fetch("holdings.json?"+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null))]);
