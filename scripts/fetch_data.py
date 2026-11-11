@@ -6,7 +6,7 @@ import argparse, datetime as dt, json, math, pathlib, random, sys, time
 
 import pandas as pd
 
-from strategy import exit_check, regime, scan
+from strategy import exit_check, regime, resample, scan
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "data.json"
@@ -23,9 +23,9 @@ def load(p, default=None):
         return default
 
 
-def to_bars(df):
+def to_bars(df, keep=KEEP):
     return [[int(pd.Timestamp(i.date()).timestamp()), round(float(r.open), 2), round(float(r.high), 2),
-             round(float(r.low), 2), round(float(r.close), 2), int(r.volume)] for i, r in df.tail(KEEP).iterrows()]
+             round(float(r.low), 2), round(float(r.close), 2), int(r.volume)] for i, r in df.tail(keep).iterrows()]
 
 
 def sample_df(sym, base, n=1260):
@@ -141,7 +141,7 @@ def main():
         if df is not None:
             ok += 1
             tw = sym.endswith((".TW", ".TWO"))
-            e = {"bars": to_bars(df), "news": nw, "asof": df.index[-1].strftime("%Y-%m-%d"), "sig": None}
+            e = {"bars": to_bars(df), "wk": to_bars(resample(df, "W-FRI"), 130), "mo": to_bars(resample(df, "ME"), 60), "news": nw, "asof": df.index[-1].strftime("%Y-%m-%d"), "sig": None}
             try:
                 e["sig"] = scan(df, tw)
                 ri = rev_info(items.get(sym, {}), sym.split(".")[0], rev) if tw else None

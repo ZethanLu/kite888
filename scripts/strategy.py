@@ -89,9 +89,37 @@ def scan(df, tw=True):
     return out
 
 
+STOP_RULES = [
+    ("m_osc_down", "月 MACD 柱體比上月差"),
+    ("w_osc_down", "週 MACD 柱體比上週差(週五判斷)"),
+    ("w_close_down", "週收盤比上週差(週五判斷)"),
+    ("below_w5", "收盤跌破 5 週均線"),
+    ("below_ma20", "收盤跌破 20 日線"),
+    ("below_ma60", "收盤跌破 60 日線(季線)"),
+    ("below_ma120", "收盤跌破 120 日線(半年線)"),
+    ("below_prev_wlow", "收盤跌破上週最低點"),
+    ("below_entry_low", "收盤跌破進場日低點"),
+    ("loss5", "虧損達 -5%"),
+]
+TP_RULES = [
+    ("w_close_down", "週收盤比上週差(週五判斷)"),
+    ("w_high_fail", "當週最高價未創前週新高(週五判斷)"),
+    ("w_osc_down", "週 MACD 柱體比上週差(週五判斷)"),
+    ("m_osc_down", "月 MACD 柱體比上月差"),
+    ("below_ma5", "收盤跌破 5 日線"),
+    ("below_w5", "收盤跌破 5 週均線"),
+    ("fall_back", "獲利跌回門檻(保本)"),
+]
+LABEL = {"stop": dict(STOP_RULES), "tp": dict(TP_RULES)}
+
+
 def exit_check(df, h):
-    """持股出場評估:獲利 ≥ 10% 進入放風箏階段,否則為防守階段(依策略 A–D)。"""
+    """持股出場評估。
+    1) 策略 A–D 的內建規則(有指定策略時);
+    2) 自訂規則 rules:{"stop":[...], "tp":[...]}。停損規則隨時有效,停利規則在最高損益達門檻(tp_after,預設 10%)後才啟用;
+    3) 能換算成價位的規則會輸出動態停損價/動態停利價(跌破即出場的位置)。"""
     st = h.get("strategy") or None
+    thr = float(h.get("tp_after") or 10) / 100
     P = prep(df)
     c, cost = at(df["close"]), float(h["cost"])
     pnl = c / cost - 1
@@ -113,11 +141,12 @@ def exit_check(df, h):
     wdn = cmp(at(P["wosc"]), at(P["wosc"], -2), op.lt)
     mdn = cmp(at(P["mosc"]), at(P["mosc"], -2), op.lt)
     wk5, d5, s120 = at(P["wsma5"]), at(P["sma"][5]), at(P["sma"][120])
-    kite = maxp >= 0.10
+    kite = maxp >= thr
+    tp_txt = f"{thr * 100:g}%"
     r = []
     if kite:
-        if pnl <= 0.10:
-            r.append("獲利跌回 +10%,保本出場")
+        if pnl <= thr:
+            r.append(f"獲利跌回 +{tp_txt},保本出場")
         if fri and cmp(c, prev_fri, op.lt):
             r.append("週五收盤低於上週五")
         if st in ("A", "B") and ((fri and wdn) or mdn):
@@ -152,5 +181,39 @@ def exit_check(df, h):
         r.append("跌破預計停損價")
     if tp and c >= tp:
         r.append("已達預計停利價")
+
+    # ---- 自訂規則與動態價位 ----
+    level = {"below_w5": wk5, "below_ma5": d5, "below_ma20": at(P["sma"][20]), "below_ma60": at(P["sma"][60]),
+             "below_ma120": s120, "below_prev_wlow": at(w["low"], -2), "below_entry_low": elow,
+             "loss5": cost * 0.95, "w_close_down": prev_fri, "fall_back": cost * (1 + thr)}
+    hit = {"m_osc_down": mdn, "w_osc_down": fri and wdn, "w_close_down": fri and cmp(c, prev_fri, op.lt),
+           "w_high_fail": fri and wk_fail, "fall_back": pnl <= thr, "loss5": pnl <= -0.05}
+    for k in ("below_w5", "below_ma5", "below_ma20", "below_ma60", "below_ma120", "below_prev_wlow", "below_entry_low"):
+        hit[k] = cmp(c, level[k], op.lt)
+    rules = h.get("rules") or {}
+    custom, lv = {"stop": [], "tp": []}, {"stop": [], "tp": []}
+    for kind in ("stop", "tp"):
+        active = True if kind == "stop" else kite
+        for rid in rules.get(kind) or []:
+            if rid not in LABEL[kind]:
+                continue
+            lvl = level.get(rid)
+            trig = bool(active and hit.get(rid))
+            custom[kind].append({"id": rid, "label": LABEL[kind][rid], "hit": trig, "active": active,
+                                 "level": None if lvl is None else round(lvl, 2)})
+            if active and lvl is not None:
+                lv[kind].append((lvl, LABEL[kind][rid]))
+            if trig:
+                r.append(("自訂停損:" if kind == "stop" else "自訂停利:") + LABEL[kind][rid])
+
+    def pick(items):
+        if not items:
+            return None
+        price, by = max(items, key=lambda x: x[0])
+        return {"price": round(price, 2), "by": by}
+
+    dyn = None
+    if custom["stop"] or custom["tp"]:
+        dyn = {"thr": round(thr * 100, 2), "kite": kite, "stop": pick(lv["stop"]), "tp": pick(lv["tp"]), "custom": custom}
     return {"strategy": st, "mode": "kite" if kite else "guard", "pnl": round(pnl * 100, 2),
-            "maxpnl": round(maxp * 100, 2), "days": days, "reasons": r, "state": "EXIT" if r else "HOLD"}
+            "maxpnl": round(maxp * 100, 2), "days": days, "reasons": r, "state": "EXIT" if r else "HOLD", "dyn": dyn}
