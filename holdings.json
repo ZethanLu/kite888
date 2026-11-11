@@ -66,17 +66,6 @@
       "entry_date": "2026-10-12"
     },
     {
-      "sym": "5425.TW",
-      "name": "台半",
-      "shares": 81,
-      "cost": 106.93,
-      "stop": 50,
-      "tp": 200,
-      "why": "",
-      "rule": "",
-      "entry_date": "2026-06-25"
-    },
-    {
       "sym": "GOOG",
       "name": "Google",
       "shares": 6,
