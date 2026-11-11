@@ -44,6 +44,7 @@ details summary{cursor:pointer}
 input[type=checkbox]{width:auto;margin-right:6px}
 .ed .ck label{display:block;font-size:14px;color:var(--tx);margin:4px 0}.ed .ck>label:first-child{font-size:12px;color:var(--mu);margin:0 0 2px}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 4px;text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:400;font-size:12px}tr+tr td{border-top:1px solid var(--bd)}
+.chip.r{background:color-mix(in srgb,var(--r) 15%,transparent);color:var(--r)}.chip.g{background:color-mix(in srgb,var(--g) 15%,transparent);color:var(--g)}
 .btn{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
 .btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
@@ -63,13 +64,14 @@ const ma=(a,n)=>a.map((_,i)=>i<n-1?null:a.slice(i-n+1,i+1).reduce((x,y)=>x+y,0)/
 const mkt=s=>/\.TWO?$|^\^TW/.test(s)?"TW":"US",cur=m=>m==="TW"?"NT$":"US$";
 const cc=v=>v>=0?"var(--r)":"var(--g)",sgn=v=>(v>=0?"+":"−")+fmt(Math.abs(v));
 const UP="var(--r)",DN="var(--g)";
-const N={d:60,w:52,m:36},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d",RV=null;
+const N={d:60,w:52,m:36},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d",RV=null;const VER="v12-手動更新";let UPD="";
 const RS={"stop": [["m_osc_down", "月 MACD 柱體比上月差"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["w_close_down", "週收盤比上週差(週五判斷)"], ["below_w5", "收盤跌破 5 週均線"], ["below_ma20", "收盤跌破 20 日線"], ["below_ma60", "收盤跌破 60 日線(季線)"], ["below_ma120", "收盤跌破 120 日線(半年線)"], ["below_prev_wlow", "收盤跌破上週最低點"], ["below_entry_low", "收盤跌破進場日低點"], ["loss5", "虧損達 -5%"]], "tp": [["w_close_down", "週收盤比上週差(週五判斷)"], ["w_high_fail", "當週最高價未創前週新高(週五判斷)"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["m_osc_down", "月 MACD 柱體比上月差"], ["below_ma5", "收盤跌破 5 日線"], ["below_w5", "收盤跌破 5 週均線"], ["fall_back", "獲利跌回門檻(保本)"]]};
-const RG={STRONG_WIND:"強風・易漲",NO_WIND:"無風・易跌",CHOPPY:"亂流・震盪"};
-const RGN={STRONG_WIND:"老闆型、上班族型全策略可用",NO_WIND:"僅限老闆型「廉價收購」,上班族型暫停",CHOPPY:"老闆型分 5 筆以上,上班族型降級或觀望"};
+const RG={STRONG_WIND:"強風",CHOPPY:"亂流",GUST:"陣風",NO_WIND:"無風"},RGT={STRONG_WIND:"勝率偏高的行情",CHOPPY:"行情震盪,嚴守紀律",GUST:"開始起風,嘗試交易",NO_WIND:"勝率很低,多做多賠!"},GOV={TW:"^TWOII",US:"^SOX"};
+const rgChip=r=>`<span class="chip ${r==="STRONG_WIND"||r==="GUST"?"r":"g"}">${RG[r]}</span>`;
+const RGN={STRONG_WIND:"老闆型、上班族型全策略可用",CHOPPY:"老闆型分 5 筆以上,上班族型降級或觀望",GUST:"開始起風,可用小部位嘗試",NO_WIND:"僅限老闆型「廉價收購」,上班族型暫停"};
 const ST={A:"老闆型・週拉回風箏",B:"老闆型・廉價收購",C:"上班族型・週趨勢風箏",D:"上班族型・強勢週風箏"};
 const LV={LEVEL_1:"營收創歷史新高",LEVEL_2:"爆發成長(YoY ≥ 100%)",LEVEL_3:"穩定門檻(YoY ≥ 30%)",FILTER_OUT:"YoY < 30%(排除)"};
-const rgOf=sym=>(DB.indices[/\.TWO$/.test(sym)?"^TWOII":/\.TW$/.test(sym)?"^TWII":"^GSPC"]||{}).regime;
+const rgOf=sym=>(DB.indices[GOV[mkt(sym)]]||{}).regime;
 const allowed=sym=>rgOf(sym)==="NO_WIND"?["B"]:["A","B","C","D"];
 const ex=h=>(DB.stocks[h.sym]||{}).exit;
 const exitReasons=h=>{const e=ex(h),Q=quote(h.sym);return e&&e.reasons?e.reasons:Q&&Q.px<=h.stop?["跌破預計停損價"]:[]};
@@ -81,24 +83,32 @@ return{o:LS.get("gh_o")||o,r:LS.get("gh_r")||r,b:LS.get("gh_b")||"main",t:LS.get
 const b64e=s=>{let b="";new TextEncoder().encode(s).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")),c=>c.charCodeAt(0)));
 async function api(path,opt={}){const g=gh();if(!g.t||!g.o||!g.r)throw new Error("請先在總覽頁最下方設定 GitHub 連線(帳號、repo 與存取權杖)");
-const isGet=!opt.method,res=await fetch(`https://api.github.com/repos/${g.o}/${g.r}/${path}${isGet?(path.includes("?")?"&":"?")+"_="+Date.now():""}`,{...opt,cache:"no-store",headers:{Authorization:`Bearer ${g.t}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"}});
+const isGet=!opt.method,res=await fetch(`https://api.github.com/repos/${g.o}/${g.r}/${path}${isGet?(path.includes("?")?"&":"?")+"_="+Date.now():""}`,{...opt,cache:"no-store",headers:{Authorization:`Bearer ${g.t}`,Accept:opt.accept||"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"}});
 if(!res.ok){let d="";try{d=(await res.json()).message||""}catch(x){}const e=new Error((res.status===401?"權杖無效或已過期":res.status===403||res.status===404?"沒有權限或找不到 repo,請檢查權杖權限與 repo 名稱":res.status===409?"檔案剛被更新過,請重新整理頁面後再試一次":`GitHub 回應 ${res.status}`)+(d?`(${d})`:""));e.status=res.status;throw e}
 return res.status===204?null:res.json()}
 async function readCfg(){const j=await api(`contents/holdings.json?ref=${encodeURIComponent(gh().b)}`);const cfg=JSON.parse(b64d(j.content));cfg.holdings=cfg.holdings||[];cfg.watchlist=cfg.watchlist||[];return{cfg,sha:j.sha}}
 async function mutate(fn,msg){for(let k=0;k<3;k++){const{cfg,sha}=await readCfg();fn(cfg);
 try{await api("contents/holdings.json",{method:"PUT",body:JSON.stringify({message:msg,content:b64e(JSON.stringify(cfg,null,2)+"\n"),sha,branch:gh().b})});return cfg}catch(e){if((e.status!==409&&e.status!==422)||k>=2)throw e;await new Promise(r=>setTimeout(r,900))}}}
-const dispatch=()=>api("actions/workflows/update-data.yml/dispatches",{method:"POST",body:JSON.stringify({ref:gh().b})}).then(()=>true).catch(()=>false);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function refreshData(){if(UPD)return;const set=t=>{UPD=t;const b=$("#upd");if(b){b.textContent=t||"更新資料";b.disabled=!!t}},runs=()=>api("actions/workflows/update-data.yml/runs?per_page=1").then(j=>(j.workflow_runs||[])[0]);
+try{set("送出中…");const prev=await runs();await api("actions/workflows/update-data.yml/dispatches",{method:"POST",body:JSON.stringify({ref:gh().b})});set("更新中(約 1–3 分鐘)…");let run=null;
+for(let i=0;i<45;i++){await sleep(8000);const r=await runs();if(r&&(!prev||r.id!==prev.id)){run=r;if(r.status==="completed")break}}
+if(!run||run.status!=="completed"){set("");say("更新還在進行中,請稍後重新整理頁面。",1);return render()}
+if(run.conclusion!=="success"){set("");say("更新失敗("+run.conclusion+"),請到 GitHub 的 Actions 頁面查看 log。",1);return render()}
+const j=await api(`contents/data/data.json?ref=${encodeURIComponent(gh().b)}`,{accept:"application/vnd.github.raw+json"});
+DB=j;DB.holdings=DB.holdings||[];DB.watchlist=DB.watchlist||[];set("");say("資料已更新。");render()}
+catch(e){set("");say("更新失敗:"+e.message+(e.status===403||e.status===404?"(請確認 token 的 Actions 權限為 Read and write)":""),1);render()}}
 const say=(t,w)=>{MSG={t,w}};
 function msgHtml(){const m=MSG;MSG=null;return m?`<div class="note${m.w?" w":""}">${esc(m.t)}</div>`:""}
 async function run(fn,needData,okText){try{const cfg=await fn();DB.holdings=cfg.holdings;DB.watchlist=cfg.watchlist;let t=okText||"已儲存到 GitHub。";
-if(needData)t+=(await dispatch())?" 已觸發資料更新,約 1 到 2 分鐘後重新整理即可看到價格與線圖。":" 新個股的價格資料會在下次排程更新後出現,也可以到 Actions 手動執行 update-data。";say(t)}catch(e){say("儲存失敗:"+e.message,1)}render()}
+if(needData)t+=" 要取得新資料(價格、線圖、營收、新聞、策略評估),請按頁面上的「更新資料」按鈕。";say(t)}catch(e){say("儲存失敗:"+e.message,1)}render()}
 function editor(sym,h){const inW=DB.watchlist.some(w=>w.sym===sym),v=k=>h&&h[k]!=null?esc(h[k]):"";
 return `<div class="card" id="edcard"><b>${h?"編輯持股":"加入持股"}</b><div class="ed"><div><label>名稱</label><input id="e_n" value="${esc(nameOf(sym))}"></div><div><label>股數</label><input id="e_sh" type="number" step="any" value="${v("shares")}"></div><div><label>成本價</label><input id="e_cost" type="number" step="any" value="${v("cost")}"></div><div><label>預計停損價</label><input id="e_stop" type="number" step="any" value="${v("stop")}"></div><div><label>預計停利價</label><input id="e_tp" type="number" step="any" value="${v("tp")}"></div><div><label>策略</label><select id="e_st"><option value="">未指定</option>${["A","B","C","D"].map(k=>`<option value="${k}"${h&&h.strategy===k?" selected":""}>${k}・${ST[k]}</option>`).join("")}</select></div><div><label>進場日期</label><input id="e_ed" type="date" value="${v("entry_date")}"></div><div class="f"><label>買進原因</label><textarea id="e_why" rows="2">${v("why")}</textarea></div><div class="f"><label>出場規則(備註)</label><input id="e_rule" value="${v("rule")}"></div><div class="f ck"><label>自訂停損條件(任一觸發即出場)</label>${RS.stop.map(([id,lb])=>`<label><input type="checkbox" name="rs" value="${id}"${h&&h.rules&&(h.rules.stop||[]).includes(id)?" checked":""}>${esc(lb)}</label>`).join("")}</div><div class="f ck"><label>自訂停利條件(獲利達門檻後,任一觸發即出場)</label>${RS.tp.map(([id,lb])=>`<label><input type="checkbox" name="rt" value="${id}"${h&&h.rules&&(h.rules.tp||[]).includes(id)?" checked":""}>${esc(lb)}</label>`).join("")}</div><div><label>停利啟用的獲利門檻 %</label><input id="e_ta" type="number" step="any" placeholder="10" value="${v("tp_after")}"></div></div><div class="row" style="margin-top:12px"><button class="btn p" id="sv">儲存到 GitHub</button>${h?`<button class="btn" id="rm">移除持股</button>`:inW?`<button class="btn" id="rmw">移除觀察</button>`:""}</div><div class="mu" style="margin-top:8px">儲存會直接修改 repo 裡的 holdings.json。策略 D 的時間停損、進場日低點,以及放風箏階段的最高損益,都需要填進場日期才算得準。</div></div>`}
 let GOEDIT=false;
 const newHoldForm=()=>`<div class="card"><b>新增持股</b><div class="mu" style="margin:6px 0">輸入代號與名稱,下一步填股數、成本、停損停利和策略。台股 4 碼數字預設為上市(.TW),上櫃請輸入 .TWO。</div><div class="ed"><div><label>代號</label><input id="nh_s" placeholder="2308 或 NVDA"></div><div><label>名稱(選填)</label><input id="nh_n" placeholder="台達電"></div></div><button class="btn p" id="nh" style="margin-top:10px">新增並編輯</button></div>`;
 function newHolding(){let s=$("#nh_s").value.trim().toUpperCase();const n=$("#nh_n").value.trim();if(!s)return;if(/^\d{4,6}[A-Z]?$/.test(s))s+=".TW";if(n)TMP[s]=n;GOEDIT=true;open(s)}
 const watchForm=()=>`<div class="card"><b>新增觀察個股</b><div class="mu" style="margin:6px 0">加入後就能搜尋。台股 4 碼數字預設為上市(.TW),上櫃請輸入 .TWO,例如 6488.TWO。</div><div class="ed"><div><label>代號</label><input id="w_s" placeholder="2454 或 NVDA"></div><div><label>名稱(選填)</label><input id="w_n" placeholder="聯發科"></div></div><button class="btn p" id="aw" style="margin-top:10px">加入觀察清單</button></div>`;
-function settings(){const g=gh();return `<div class="card"><b>GitHub 連線(編輯持股用)</b><div class="mu" style="margin:6px 0">權杖只存在這個瀏覽器。請建立只限這個 repo 的 fine-grained token:Contents 設為 Read and write;Actions 也設為 Read and write 的話,新增個股後會自動觸發資料更新。</div><div class="ed"><div><label>帳號</label><input id="g_o" value="${esc(g.o)}"></div><div><label>Repo</label><input id="g_r" value="${esc(g.r)}"></div><div><label>分支</label><input id="g_b" value="${esc(g.b)}"></div><div><label>存取權杖</label><input id="g_t" type="password" autocomplete="off" placeholder="${g.t?"已設定,留白表示不變":"貼上 token"}"></div></div><div class="row" style="margin-top:10px"><button class="btn p" id="gs">儲存設定</button><button class="btn" id="gt">測試連線</button><button class="btn" id="gc">清除權杖</button></div></div>`}
+function settings(){const g=gh();return `<div class="card"><b>GitHub 連線(編輯持股用)</b><div class="mu" style="margin:6px 0">權杖只存在這個瀏覽器。請建立只限這個 repo 的 fine-grained token:Contents 設為 Read and write;Actions 也要設為 Read and write,「更新資料」按鈕才能使用。</div><div class="ed"><div><label>帳號</label><input id="g_o" value="${esc(g.o)}"></div><div><label>Repo</label><input id="g_r" value="${esc(g.r)}"></div><div><label>分支</label><input id="g_b" value="${esc(g.b)}"></div><div><label>存取權杖</label><input id="g_t" type="password" autocomplete="off" placeholder="${g.t?"已設定,留白表示不變":"貼上 token"}"></div></div><div class="row" style="margin-top:10px"><button class="btn p" id="gs">儲存設定</button><button class="btn" id="gt">測試連線</button><button class="btn" id="gc">清除權杖</button></div></div>`}
 function saveHolding(){const g=i=>$("#e_"+i).value.trim(),n=i=>parseFloat(g(i));
 const prev=held(sel)||{},o={...prev,sym:sel,name:g("n")||nameOf(sel),shares:n("sh"),cost:n("cost"),stop:n("stop"),tp:n("tp"),why:g("why"),rule:g("rule"),strategy:g("st"),entry_date:g("ed"),tp_after:n("ta")};if(!o.strategy)delete o.strategy;if(!o.entry_date)delete o.entry_date;if(!(o.tp_after>0))delete o.tp_after;
 const ck=nm=>[...document.querySelectorAll(`#edcard input[name=${nm}]:checked`)].map(x=>x.value),rl={stop:ck("rs"),tp:ck("rt")};if(rl.stop.length||rl.tp.length)o.rules=rl;else delete o.rules;
@@ -118,7 +128,7 @@ const d=o.bars.map(([t,o,h,l,c,v])=>({t,o,h,l,c,v}));const cv=a=>a.map(([t,o,h,l
 function agg(d,k){const g=[];let key=null;for(const x of d){const kk=k==="w"?Math.floor((x.t/86400+3)/7):new Date(x.t*1000).toISOString().slice(0,7);if(kk!==key){g.push({...x});key=kk}else{const y=g[g.length-1];y.h=Math.max(y.h,x.h);y.l=Math.min(y.l,x.l);y.c=x.c;y.v+=x.v}}return g}
 const held=s=>DB.holdings.find(h=>h.sym===s);
 const TMP={};
-const nameOf=s=>(held(s)||DB.watchlist.find(w=>w.sym===s)||{}).name||TMP[s]||s;
+const nameOf=s=>(held(s)||DB.watchlist.find(w=>w.sym===s)||{}).name||TMP[s]||(DB.indices[s]||{}).name||s;
 const stat=(h,p)=>{const e=ex(h);return e&&e.state==="EXIT"?["bad","觸發出場訊號"]:p<=h.stop?["bad","已碰停損線"]:p>=h.tp*.97?["bad","接近停利"]:["","持有中"]};
 /* 圖表 */
 function kline(d,ln){const W=340,Hh=180,bw=W/d.length,m20=ma(d.map(k=>k.c),20);ln=ln.filter(l=>Number.isFinite(l.y)&&l.y>0);
@@ -133,9 +143,9 @@ const D=dif.slice(-n),E=dea.slice(-n),B=his.slice(-n),mx=Math.max(...D.map(Math.
 return `<svg viewBox="0 0 ${W} ${Hh}"><line class="gl" x1="0" x2="${W}" y1="${Hh/2}" y2="${Hh/2}"/>`+B.map((v,i)=>`<rect x="${i*bw+bw*.2}" y="${Math.min(y(v),Hh/2)}" width="${bw*.6}" height="${Math.abs(y(v)-Hh/2)}" fill="${v>=0?UP:DN}" opacity=".75"/>`).join("")+`<polyline fill="none" stroke="#3b82f6" stroke-width="1.2" points="${pl(D)}"/><polyline fill="none" stroke="#e8a317" stroke-width="1.2" points="${pl(E)}"/></svg>`}
 function spark(d,ch){d=d.slice(-40).map(k=>k.c);const lo=Math.min(...d),hi=Math.max(...d);return `<svg viewBox="0 0 340 38" preserveAspectRatio="none" style="height:38px"><polyline points="${d.map((v,i)=>`${i*340/(d.length-1)},${34-(v-lo)/(hi-lo||1)*30}`).join(" ")}" fill="none" stroke="${cc(ch)}" stroke-width="2"/></svg>`}
 /* 頁面 */
-const banner=()=>`<div class="note${DB.sample?" w":""}">${DB.sample?"目前是範例資料,執行一次 update-data 排程後會換成真實資料。":""}資料更新時間:${esc(DB.updated)}(台北時間)</div>`;
-function rgLine(m){const k=m==="TW"?[["^TWII","加權"],["^TWOII","櫃買"]]:[["^GSPC","S&P 500"]],r=k.map(([i,n])=>DB.indices[i]&&DB.indices[i].regime?`${n}${RG[DB.indices[i].regime]}`:"").filter(Boolean);
-const f=DB.indices[k[0][0]];return r.length?`<div class="mu" style="margin:-4px 2px 8px">${r.join("、")}。${RGN[f.regime]}${m==="US"?"(沿用同一套判定)":""}</div>`:""}
+const banner=()=>`<div class="note${DB.sample?" w":""}"><div class="row"><span>${DB.sample?"目前是範例資料,按「更新資料」抓取真實資料。":""}資料更新時間:${esc(DB.updated)}(台北時間)・頁面版本 ${VER}</span><button class="btn p" id="upd" style="padding:4px 14px;white-space:nowrap"${UPD?" disabled":""}>${UPD||"更新資料"}</button></div></div>`;
+function rgLine(m){const x=DB.indices[GOV[m]];if(!x||!x.regime)return"";const i=x.rg;
+return `<div class="card" style="margin-bottom:12px;padding:12px"><div class="row"><span>風度圖(依${esc(x.name)})</span>${rgChip(x.regime)}</div><div style="margin-top:6px"><b>${RGT[x.regime]}</b></div><div class="mu">${RGN[x.regime]}</div>${i?`<div class="mu" style="margin-top:6px">${esc(x.name)} ${fmt(i.close)} ${i.close>=i.ma20?"≥":"<"} 20MA ${fmt(i.ma20)};MACD 柱 ${fmt(i.osc,3)} ${i.osc>i.osc_prev?">":"<"} 前一交易日 ${fmt(i.osc_prev,3)}</div>`:""}</div>`}
 function holdRows(){if(!DB.holdings.length)return"";return `<div class="mu" style="margin-top:12px">點選個股查看持倉狀況</div>`+DB.holdings.map(h=>{const Q=quote(h.sym),nm=`<b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span>`;
 if(!Q)return `<div class="row item" data-s="${esc(h.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span class="mu">尚無資料</span></div>`;
 const pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
@@ -152,7 +162,11 @@ const k=ks.some(x=>x[0]===RV)?RV:ks[0][0],rows=r[k].slice(-{m:12,q:8,y:7}[k]).re
 return `<div class="card"><div class="row"><b>營收</b>${r.high?`<span class="chip">最新月營收創歷史新高</span>`:""}</div><div class="seg" style="margin:8px 0">${ks.map(([i,n])=>`<button data-rv="${i}" class="${k===i?"on":""}">${n}</button>`).join("")}</div><table><tr><th>期間</th><th>營收(億)</th><th>YoY%</th>${h2?`<th>${h2}</th>`:""}</tr>${rows.map(x=>`<tr><td>${esc(x.p)}</td><td>${fmt(x.rev)}</td><td>${pct(x.yoy)}</td>${h2?`<td>${pct(x[k==="m"?"mom":"qoq"])}</td>`:""}</tr>`).join("")}</table><div class="mu" style="margin-top:6px">YoY 為對去年同期;${k==="m"?"MoM 為對上月":k==="q"?"QoQ 為對上一季":"年度只列 YoY"}。單位:億元(原幣)。${mkt(sym)==="US"?"美股不公布月營收。":""}</div></div>`}
 function newsCard(sym,Q){const li=a=>a.length?`<ul>${a.map(n=>`<li><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a> <span class="mu">${esc(n.pub||"")}${n.d?"・"+esc(n.d):""}</span></li>`).join("")}</ul>`:`<div class="mu" style="margin-top:6px">目前沒有相關新聞</div>`,tw=(DB.stocks[sym]||{}).news_tw||[];
 return `<div class="card"><b>重大新聞</b>${mkt(sym)==="TW"?`<div class="mu" style="margin-top:8px">台灣新聞</div>${li(tw)}<div class="mu" style="margin-top:10px">國際新聞(Yahoo)</div>`:""}${li(Q.news)}</div>`}
-function watchPage(){const L=DB.watchlist.filter(w=>!held(w.sym));let s=banner()+watchForm();
+const listSwitch=cur=>`<div class="seg">${[["hold","持股"],["watch","觀察清單"]].map(([k,n])=>`<button data-nav="${k}" class="${cur===k?"on":""}">${n}</button>`).join("")}</div>`;
+function watchMini(){const L=DB.watchlist.filter(w=>!held(w.sym)).slice(0,5);if(!L.length)return `<div class="card" style="margin-top:12px"><b>觀察清單</b><div class="mu" style="margin-top:6px">還沒有觀察個股,按上方「觀察清單」按鈕新增。</div></div>`;
+return `<div class="card" style="margin-top:12px"><b>觀察清單</b>${L.map(w=>{const Q=quote(w.sym),nm=`<b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)}</span>`;if(!Q)return `<div class="row item" data-s="${esc(w.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span class="mu">尚無資料</span></div>`;const ch=(Q.px/Q.prev-1)*100;
+return `<div class="row item" data-s="${esc(w.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span style="text-align:right">${fmt(Q.px)} <b style="color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</b></span></div>`}).join("")}<div class="mu" style="margin-top:10px">點選個股查看技術線圖、營收、新聞</div></div>`}
+function watchPage(){const L=DB.watchlist.filter(w=>!held(w.sym));let s=banner()+listSwitch("watch")+watchForm();
 if(!L.length)s+=`<div class="card mu">觀察清單是空的,用上方表單加入個股。</div>`;
 L.forEach(w=>{const Q=quote(w.sym),sg=(DB.stocks[w.sym]||{}).sig;
 if(!Q){s+=`<div class="card item" data-s="${esc(w.sym)}"><b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)} 尚無資料,更新後顯示</span></div>`;return}
@@ -165,7 +179,7 @@ return `<div style="margin-top:12px"><b>自訂動態停損停利</b><div class="
 const goBack=()=>{const st=typeof history!=="undefined"&&history.state;if(sel){if(st&&st.d)history.back();else{sel=null;render()}}else if(tab!=="home"){if(st&&st.t)history.back();else{tab="home";render()}}};
 try{window.onpopstate=()=>{if(sel)sel=null;else if(tab!=="home")tab="home";render()}}catch(e){}
 function stratCard(sym,h){const S=DB.stocks[sym]||{},sg=S.sig,e=S.exit,r=rgOf(sym);let s=`<div class="card"><b>策略檢查</b>`;
-if(r)s+=`<div class="row" style="margin-top:8px"><span class="mu">大盤風度</span><span class="chip${r==="NO_WIND"?" bad":""}">${RG[r]}</span></div><div class="mu">${RGN[r]}</div>`;
+if(r)s+=`<div class="row" style="margin-top:8px"><span class="mu">大盤風度</span>${rgChip(r)}</div><div class="mu">依${mkt(sym)==="TW"?"櫃買指數":"費城半導體指數"}:${RGT[r]}。${RGN[r]}</div>`;
 if(h&&h.strategy)s+=`<div style="margin-top:10px"><b>${esc(ST[h.strategy]||h.strategy)}</b>`+(e?`<div class="kv"><div><span class="mu">階段</span><b>${e.mode==="kite"?"放風箏":"防守"}</b></div><div><span class="mu">損益</span><b style="color:${cc(e.pnl)}">${sgn(e.pnl)}%</b></div><div><span class="mu">最高損益</span><b style="color:${cc(e.maxpnl)}">${sgn(e.maxpnl)}%</b></div></div>`+(e.reasons.length?`<div class="alert"><b>觸發出場條件</b>${e.reasons.map(x=>`<div style="margin-top:4px">${esc(x)}</div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有出場訊號,續抱</div>`):`<div class="mu">尚無出場評估,資料更新後顯示</div>`)+`</div>`;
 else if(h)s+=`<div class="mu" style="margin-top:10px">這檔還沒指定策略。在下方編輯持股時選擇 A 到 D,系統才會依策略規則判斷出場。</div>`;
 if(h&&e&&e.dyn)s+=dynBlock(e.dyn);
@@ -174,18 +188,24 @@ s+=`<div class="mu" style="margin-top:8px">單日成值 ${sg.turn} 億、近 15 
 if(sg.rev)s+=`<div style="margin-top:8px"><span class="mu">營收盾牌</span> <b>${LV[sg.rev.level]}</b>${sg.rev.yoy!=null?` <span class="mu">YoY ${fmt(sg.rev.yoy,1)}%</span>`:""}</div>`}
 return s+`</div>`}
 function home(){let s=banner();
-["TW","US"].forEach(m=>{s+=`<div class="sec">${m==="TW"?"台股大盤":"美股大盤"}</div>${rgLine(m)}<div class="grid">`+Object.entries(DB.indices).filter(([,x])=>x.m===m).map(([sym,x])=>{const Q=quote(sym);if(!Q)return"";const ch=(Q.px/Q.prev-1)*100,k=Q.d.at(-1);return `<div class="card" style="margin:0"><div class="mu">${esc(x.name)} ${x.regime?`<span class="chip${x.regime==="NO_WIND"?" bad":""}">${RG[x.regime]}</span>`:""}</div><div class="big">${fmt(Q.px)}</div><div style="color:${cc(ch)};font-weight:600">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</div><div class="mu">高 ${fmt(k.h,0)}・低 ${fmt(k.l,0)}</div>${spark(Q.d,ch)}</div>`}).join("")+`</div>`});
+["TW","US"].forEach(m=>{s+=`<div class="sec">${m==="TW"?"台股大盤":"美股大盤"}</div>${rgLine(m)}<div class="grid">`+Object.entries(DB.indices).filter(([,x])=>x.m===m).map(([sym,x])=>{const Q=quote(sym);if(!Q)return"";const ch=(Q.px/Q.prev-1)*100,k=Q.d.at(-1);return `<div class="card item" data-s="${esc(sym)}" style="margin:0"><div class="mu">${esc(x.name)} ${GOV[m]===sym&&x.regime?rgChip(x.regime):""}</div><div class="big">${fmt(Q.px)}</div><div style="color:${cc(ch)};font-weight:600">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</div><div class="mu">高 ${fmt(k.h,0)}・低 ${fmt(k.l,0)}</div>${spark(Q.d,ch)}</div>`}).join("")+`</div>`});
 s+=`<div class="sec">持股損益</div><div class="grid">`+["TW","US"].map(m=>{let c=0,v=0;DB.holdings.forEach(h=>{const Q=quote(h.sym);if(mkt(h.sym)===m&&Q){c+=h.cost*h.shares;v+=Q.px*h.shares}});const pl=v-c;return `<div class="card" style="margin:0"><div class="mu">${m==="TW"?"台股":"美股"}市值</div><div class="big">${cur(m)}${fmt(v,0)}</div><div style="color:${cc(pl)};font-weight:600">${c?`${sgn(pl)} (${sgn(pl/c*100)}%)`:"尚無持股"}</div></div>`}).join("")+`</div>`;
-s+=`<button class="btn p" id="gohold" style="margin-top:12px;width:100%">管理持股:新增 / 編輯</button>`;
+s+=`<div class="grid" style="margin-top:12px"><button class="btn p" id="gohold">管理持股</button><button class="btn p" id="gowatch">觀察清單 (${DB.watchlist.filter(w=>!held(w.sym)).length})</button></div>`+watchMini();
 const hit=DB.holdings.map(h=>({h,r:exitReasons(h)})).filter(x=>x.r.length);
 return s+sigCard()+`<div class="card" style="margin-top:14px"><div class="row"><b>持股出場檢查</b><span class="mu">${DB.holdings.length} 檔持股</span></div>`+(hit.length?`<div class="alert"><b>已觸發出場條件</b>${hit.map(({h,r})=>`<div class="item" data-s="${esc(h.sym)}" style="margin-top:6px;cursor:pointer"><b>${esc(h.name)}</b> <span class="mu">${esc(r.join("、"))}</span></div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有觸發出場條件</div>`)+holdRows()+`</div>`+settings()}
 function list(){const L=DB.holdings.filter(h=>mkt(h.sym)===mk);
-let s=banner()+newHoldForm()+`<div class="seg"><button data-m="TW" class="${mk==="TW"?"on":""}">台股</button><button data-m="US" class="${mk==="US"?"on":""}">美股</button></div>`;
+let s=banner()+listSwitch("hold")+newHoldForm()+`<div class="seg"><button data-m="TW" class="${mk==="TW"?"on":""}">台股</button><button data-m="US" class="${mk==="US"?"on":""}">美股</button></div>`;
 if(!L.length)s+=`<div class="card mu">這個市場還沒有持股,請編輯 holdings.json。</div>`;
 L.forEach(h=>{const Q=quote(h.sym);if(!Q)return s+=`<div class="card item" data-s="${esc(h.sym)}"><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)} 尚無資料,點開可編輯</span></div>`;
 const pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
 s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span><span class="chip ${k}">${t}</span> <button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div>${revLine(h.sym)}</div>`});return s}
-function detail(sym){const h=held(sym),Q=quote(sym),back="";
+const chartCard=(S,d,L)=>`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,L)}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
+function indCard(Q){const c=Q.d.map(k=>k.c),avg=k=>c.length>=k?c.slice(-k).reduce((a,b)=>a+b,0)/k:null,e12=ema(c,12),e26=ema(c,26),dif=e12.map((v,i)=>v-e26[i]),dea=ema(dif,9),n=c.length-1,osc=dif[n]-dea[n],po=dif[n-1]-dea[n-1],ma=[5,10,20,60].map(k=>[k,avg(k)]).filter(x=>x[1]!=null);
+return `<div class="card"><b>技術指標</b><table><tr><th>均線</th><th>數值</th><th>現價相對</th></tr>${ma.map(([k,v])=>`<tr><td>MA${k}</td><td>${fmt(v)}</td><td>${pct((Q.px/v-1)*100)}</td></tr>`).join("")}</table><div class="kv"><div><span class="mu">DIF</span><b>${fmt(dif[n])}</b></div><div><span class="mu">MACD</span><b>${fmt(dea[n])}</b></div><div><span class="mu">MACD 柱</span><b style="color:${cc(osc)}">${fmt(osc)}</b></div></div><div class="mu" style="margin-top:6px">MACD 柱${osc>po?"大於":"小於"}前一交易日(${fmt(po)})</div></div>`}
+function indexDetail(sym){const x=DB.indices[sym],Q=quote(sym);if(!Q)return `<div class="card" style="margin-top:12px">${esc(x.name)} 尚無資料</div>`;
+const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,g=GOV[x.m]===sym;
+return `<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(x.name)} <span class="mu">${esc(sym)}</span></b>${g&&x.regime?rgChip(x.regime):""}</div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div><div class="mu">資料日期 ${esc(x.asof||"")}</div></div>`+(g?rgLine(x.m):"")+chartCard(S,d,[])+indCard(Q)}
+function detail(sym){if(DB.indices[sym])return indexDetail(sym);const h=held(sym),Q=quote(sym),back="";
 if(!Q)return back+`<div class="card" style="margin-top:12px">${esc(nameOf(sym))} 目前還沒有這檔的行情資料。填好下方資料並儲存後會觸發更新,約 1 到 2 分鐘後出現線圖。</div>`+editor(sym,h);
 const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,m=mkt(sym);
 let s=back+`<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(nameOf(sym))} <span class="mu">${esc(sym)}</span></b><span>${h?`<span class="chip ${stat(h,Q.px)[0]}">${stat(h,Q.px)[1]}</span>`:`<span class="chip">觀察中</span>`} <button class="btn" id="goedit" style="padding:2px 12px">${h?"編輯":"加入持股"}</button></span></div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div>`;
@@ -195,15 +215,16 @@ if(h){const rg=h.tp-h.stop,pos=Math.max(0,Math.min(100,(Q.px-h.stop)/rg*100)),cp
 s+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)||"尚未填寫"}</p></div><div class="card"><b>停損與停利</b><div class="kv"><div><span class="mu">預計停損</span><b style="color:var(--st)">${fmt(h.stop)}</b></div><div><span class="mu">預計停利</span><b style="color:var(--tpc)">${fmt(h.tp)}</b></div><div><span class="mu">現價位置</span><b>${fmt(pos,0)}%</b></div></div><div class="bar"><i style="left:calc(${cp}% - 2px);opacity:.35"></i><i style="left:calc(${pos}% - 2px)"></i></div><div class="row mu"><span>停損</span><span>淡色為成本</span><span>停利</span></div><p class="mu" style="margin:10px 0 0">出場規則:${esc(h.rule)||"尚未填寫"}</p></div>`}
 s+=`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,lines(h,h?ex(h):null))}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
 return s+revCard(sym)+newsCard(sym,Q)+editor(sym,h)}
-function render(){$("#ttl").textContent=sel?"個股":{home:"總覽",hold:"持股",watch:"觀察清單"}[tab];
+function render(){$("#ttl").textContent=sel?(DB.indices[sel]?"指數":"個股"):{home:"總覽",hold:"持股",watch:"觀察清單"}[tab];
 const hb=$("#hb");if(hb){hb.hidden=!(sel||tab!=="home");hb.textContent=sel?"← 返回"+{home:"總覽",hold:"持股",watch:"觀察清單"}[tab]:"← 返回總覽"}
 document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
 $("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():tab==="watch"?watchPage():list());
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mk=b.dataset.m;render()});
 document.querySelectorAll(".item").forEach(b=>b.onclick=()=>open(b.dataset.s));
 const on=(i,f)=>{const e=$(i);if(e)e.onclick=f};
-on("#bk",goBack);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH);
-on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{try{history.pushState({t:1},"")}catch(e){}tab="hold";sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
+on("#bk",goBack);on("#upd",refreshData);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH);
+on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{try{history.pushState({t:1},"")}catch(e){}tab="hold";sel=null;render();scrollTo(0,0)});on("#gowatch",()=>{try{history.pushState({t:1},"")}catch(e){}tab="watch";sel=null;render();scrollTo(0,0)});
+document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{tab=b.dataset.nav;sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
 document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{GOEDIT=true});
 document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;render()});
 document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{RV=b.dataset.rv;render()});
