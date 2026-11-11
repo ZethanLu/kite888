@@ -7,14 +7,15 @@ import xml.etree.ElementTree as ET
 
 import pandas as pd
 
-from strategy import exit_check, regime, resample, scan
+from strategy import exit_check, regime, regime_info, resample, scan
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "data.json"
 TPE = dt.timezone(dt.timedelta(hours=8))
 KEEP = 260  # 網頁只保留近 260 根日 K;策略用 5 年資料計算
 INDICES = [("^TWII", "加權指數", "TW", 23400), ("^TWOII", "櫃買指數", "TW", 268),
-           ("^GSPC", "S&P 500", "US", 5900), ("^IXIC", "那斯達克", "US", 19300)]
+           ("^GSPC", "S&P 500", "US", 5900), ("^IXIC", "那斯達克", "US", 19300),
+           ("^SOX", "費城半導體", "US", 5200)]
 
 
 def load(p, default=None):
@@ -263,7 +264,8 @@ def main():
         df, _ = get(sym, base)
         if df is not None:
             ok += 1
-            indices[sym] = {"name": name, "m": m, "bars": to_bars(df), "regime": regime(df),
+            indices[sym] = {"name": name, "m": m, "bars": to_bars(df), "wk": to_bars(resample(df, "W-FRI"), 130),
+                            "mo": to_bars(resample(df, "ME"), 60), "regime": regime(df), "rg": regime_info(df),
                             "asof": df.index[-1].strftime("%Y-%m-%d")}
         elif sym in old.get("indices", {}):
             indices[sym] = old["indices"][sym]

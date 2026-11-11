@@ -38,17 +38,22 @@ def prep(df):
             "wsma5": w["close"].rolling(5).mean(), "turn": c * df["volume"]}
 
 
-def regime(df):
-    """風度圖:STRONG_WIND 強風/易漲、NO_WIND 無風/易跌、CHOPPY 亂流/震盪。"""
+def regime_info(df):
+    """風度圖(依課程圖示):指數是否在 20MA 之上(>=),加上當日 MACD 柱是否大於前一交易日。
+    >=20MA 且柱變大=強風;>=20MA 且柱變小=亂流;<20MA 且柱變大=陣風;<20MA 且柱變小=無風。"""
     c = df["close"]
     if len(c) < 30:
-        return "CHOPPY"
-    osc, sma20 = macd_osc(c), c.rolling(20).mean()
-    if c.iloc[-1] > sma20.iloc[-1] and osc.iloc[-1] > 0 and osc.iloc[-1] > osc.iloc[-2]:
-        return "STRONG_WIND"
-    if c.iloc[-1] < sma20.iloc[-1] and osc.iloc[-1] < 0 and osc.iloc[-1] < osc.iloc[-2]:
-        return "NO_WIND"
-    return "CHOPPY"
+        return None
+    osc, ma20 = macd_osc(c), c.rolling(20).mean()
+    above, rising = bool(c.iloc[-1] >= ma20.iloc[-1]), bool(osc.iloc[-1] > osc.iloc[-2])
+    state = {(True, True): "STRONG_WIND", (True, False): "CHOPPY", (False, True): "GUST", (False, False): "NO_WIND"}[(above, rising)]
+    return {"state": state, "close": round(float(c.iloc[-1]), 2), "ma20": round(float(ma20.iloc[-1]), 2),
+            "osc": round(float(osc.iloc[-1]), 3), "osc_prev": round(float(osc.iloc[-2]), 3)}
+
+
+def regime(df):
+    i = regime_info(df)
+    return i["state"] if i else "CHOPPY"
 
 
 def surge(m, n):
