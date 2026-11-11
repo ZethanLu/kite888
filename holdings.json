@@ -181,10 +181,5 @@
       }
     }
   ],
-  "watchlist": [
-    {
-      "sym": "MSFT",
-      "name": "Microsoft"
-    }
-  ]
+  "watchlist": []
 }
