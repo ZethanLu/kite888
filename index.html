@@ -167,18 +167,19 @@ body {
   z-index: 25;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   padding: 10px 32px;
   background: color-mix(in srgb, var(--card) 88%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--bd);
-  min-height: 62px;
+  height: 62px;
 }
 #ttl { font-size: 18px; font-weight: 700; white-space: nowrap; }
-.search { position: relative; width: min(480px, 36vw); margin-left: 8px; }
+#updinfo { white-space: nowrap; font-size: 12px; }
+.search { position: relative; width: min(440px, 32vw); margin-left: 4px; }
 .search input {
   padding-left: 14px;
-  padding-right: 64px;
+  padding-right: 40px;
   background: var(--bg);
   border-radius: 10px;
   height: 38px;
@@ -392,7 +393,7 @@ input[type=checkbox] { width: auto; margin-right: 6px; accent-color: var(--ac); 
 .alloc-legend span { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .alloc-legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 
-/* 表格優化 */
+/* 表格優化 (已修正標題遮擋問題) */
 ul { margin: 6px 0 0; padding-left: 18px; }
 li { margin: 5px 0; }
 a { color: var(--ac); text-decoration: none; }
@@ -418,19 +419,16 @@ th, td { padding: 10px 10px; text-align: right; font-variant-numeric: tabular-nu
 th:first-child, td:first-child { text-align: left; }
 th { color: var(--mu); font-weight: 600; font-size: 12px; white-space: nowrap; letter-spacing: 0.02em; }
 tr + tr td { border-top: 1px solid var(--bd); }
-.tbl th, .tbl td { padding: 11px 12px; }
+.tbl th, .tbl td { padding: 12px 12px; }
 .tbl th.l, .tbl td.l { text-align: left; }
 .tbl th {
-  position: sticky;
-  top: 62px;
   background: var(--card);
-  z-index: 5;
   border-bottom: 2px solid var(--bd);
 }
 .tbl tr.item:hover td { background: var(--card-hover); }
 th[data-sort] { cursor: pointer; user-select: none; }
 th[data-sort]:hover { color: var(--tx); }
-.tcard { padding: 4px 12px 8px; overflow-x: auto; }
+.tcard { padding: 6px 14px 10px; overflow-x: auto; }
 
 /* 迷你停損停利區間尺 */
 .mini-rng {
@@ -539,7 +537,7 @@ const sgn = (v, d = 2) => (v >= 0 ? "+" : "−") + fmt(Math.abs(v), d);
 const UP = "var(--r)", DN = "var(--g)";
 const N = { d: 135, w: 104, m: 60 }, TFN = { d: "日 K", w: "週 K", m: "月 K" }, TFU = { d: "日", w: "週", m: "個月" };
 let TF = "d", RV = null, DTAB = "strat", QFILTER = "";
-const VER = "v16・桌面寬螢幕旗艦版";
+const VER = "v16.1・桌面寬螢幕旗艦版";
 let UPD = "", WF = "all";
 const TAGS = ["打工型", "上班型", "老闆型", "市值排列", "其他"];
 
@@ -1140,7 +1138,7 @@ function allIdxStrip() {
   return `<div class="idx-strip">` + Object.entries(DB.indices).map(([sym, x]) => {
     const Q = quote(sym);
     if (!Q) return "";
-    const ch = (Q.px / Q.prev - 1) * 100, k = Q.d.at(-1);
+    const ch = (Q.px / Q.prev - 1) * 100;
     return `<div class="card item" data-s="${esc(sym)}">
       <div class="row"><span class="mu"><b>${esc(x.name)}</b></span>${GOV[x.m] === sym && x.regime ? rgChip(x.regime) : `<span class="mu">${x.m}</span>`}</div>
       <div class="row" style="margin-top:6px;align-items:baseline">
@@ -1199,7 +1197,7 @@ const tagChip = w => w && w.tag ? `<span class="chip">${esc(w.tag)}</span>` : ""
 const tagFields = (p, w) => `<div><label>觀察策略分類</label><select id="${p}_t"><option value="">未標記</option>${TAGS.map(t => `<option value="${t}"${w && w.tag === t ? " selected" : ""}>${t}</option>`).join("")}</select></div><div><label>原因 / 備註 (選「其他」必填)</label><input id="${p}_r" value="${w ? esc(w.tag_note || "") : ""}"></div>`;
 const wfRow = all => {
   const c = k => k === "all" ? all.length : k === "none" ? all.filter(w => !w.tag).length : all.filter(w => w.tag === k).length;
-  return `<div class="seg" style="flex-wrap:wrap">${[["all", "全部"], ...TAGS.map(t => [t, t]), ["none", "未標記"]].map(([k, n]) => `<button data-wf="${k}" class="${WF === k ? "on" : ""}">${n} (${c(k)})</button>`).join("")}</div>`;
+  return `<div class="seg" style="flex-wrap:wrap;margin:0">${[["all", "全部"], ...TAGS.map(t => [t, t]), ["none", "未標記"]].map(([k, n]) => `<button data-wf="${k}" class="${WF === k ? "on" : ""}">${n} (${c(k)})</button>`).join("")}</div>`;
 };
 
 function tagCard(sym) {
@@ -1273,7 +1271,7 @@ function watchMini() {
 
 function wrow(w) {
   const Q = quote(w.sym), sg = (DB.stocks[w.sym] || {}).sig;
-  const n = `<b>${esc(w.name || w.sym)}</b> <span class="mu">${esc(w.sym)}</span>`;
+  const n = `<b>${esc(w.name || w.sym)}</b> <div class="mu">${esc(w.sym)}</div>`;
   const tg = w.tag ? tagChip(w) : '<span class="mu">未標記</span>';
   const nt = `<span class="mu">${esc(w.tag_note || "")}</span>`;
   if (!Q) return `<tr class="item" data-s="${esc(w.sym)}"><td>${n}</td><td class="l">${tg}</td><td class="l">${nt}</td><td colspan="5" class="l mu">尚無資料，按「更新資料」取得</td></tr>`;
@@ -1300,14 +1298,14 @@ function watchPage() {
       <button class="btn p" id="open-watch-add">＋ 新增觀察個股</button>
     </div>` +
     `<div class="card tcard">${L.length ? `<table class="tbl">
-      <tr>${th("watch", "name", "名稱", "l")}${th("watch", "tag", "觀察策略", "l")}<th class="l">原因 / 備註</th>${th("watch", "px", "現價")}${th("watch", "chg", "今日漲跌")}<th class="l">進場訊號</th><th class="l">最新營收</th><th>操作</th></tr>
-      ${L.map(wrow).join("")}
+      <thead><tr>${th("watch", "name", "名稱", "l")}${th("watch", "tag", "觀察策略", "l")}<th class="l">原因 / 備註</th>${th("watch", "px", "現價")}${th("watch", "chg", "今日漲跌")}<th class="l">進場訊號</th><th class="l">最新營收</th><th>操作</th></tr></thead>
+      <tbody>${L.map(wrow).join("")}</tbody>
     </table>` : `<div class="mu" style="padding:18px">${all.length ? "這個分類目前沒有個股。" : "觀察清單是空的，按右上角按鈕新增。"}</div>`}</div>`;
 }
 
 function hrow(h, full) {
   const Q = quote(h.sym), m = mkt(h.sym);
-  const n = `<b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span>`;
+  const n = `<b>${esc(h.name)}</b> <div class="mu">${esc(h.sym)}</div>`;
   if (!Q) return `<tr class="item" data-s="${esc(h.sym)}"><td>${n}</td><td colspan="${full ? 11 : 5}" class="l mu">尚無行情資料，點右側可編輯</td><td><button class="btn sm" data-edit="${esc(h.sym)}">編輯</button></td></tr>`;
   const ch = (Q.px / Q.prev - 1) * 100, pl = (Q.px - h.cost) * h.shares, pc = (Q.px / h.cost - 1) * 100;
   const [k, t] = stat(h, Q.px), st = `<span class="chip ${k}">${t}</span>`;
@@ -1315,7 +1313,7 @@ function hrow(h, full) {
 
   if (!full) {
     return `<tr class="item" data-s="${esc(h.sym)}">
-      <td>${n}</td>
+      <td><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span></td>
       <td class="num">${fmt(Q.px)}</td>
       <td class="num" style="color:${cc(ch)}">${sgn(ch)}%</td>
       <td class="num">${cur(m)}${fmt(Q.px * h.shares, 0)}</td>
@@ -1333,7 +1331,7 @@ function hrow(h, full) {
     <td class="num">${cur(m)}${fmt(Q.px * h.shares, 0)}</td>
     <td class="num" style="color:${cc(pl)};font-weight:600">${sgn(pl, m === "TW" ? 0 : 2)}</td>
     <td class="num" style="color:${cc(pc)};font-weight:700">${sgn(pc)}%</td>
-    <td class="l"><div class="mini-rng" title="停損 ${h.stop} ~ 停利 ${h.tp} (${fmt(pos, 0)}%)"><i style="left:calc(${pos}% - 1.5px)"></i></div><span class="mu num">${fmt(pos, 0)}%</span></td>
+    <td class="l"><div class="mini-rng" title="停損 ${h.stop} ~ 停利 ${h.tp} (${fmt(pos, 0)}%)"><i style="left:calc(${pos}% - 1.5px)"></i></div><div class="mu num" style="margin-top:2px">${fmt(pos, 0)}%</div></td>
     <td class="l">${h.strategy ? `<span class="chip mu-chip">${h.strategy}</span>` : '<span class="mu">—</span>'}</td>
     <td class="l">${st}</td>
     <td class="l">${revCell(h.sym)}</td>
@@ -1351,8 +1349,8 @@ function exitCard() {
     </div>
     ${hit.length ? `<div class="alert"><b>⚠️ 已觸發出場條件 (${hit.length} 檔)</b>${hit.map(({ h, r }) => `<div class="item" data-s="${esc(h.sym)}" style="margin-top:6px"><b>${esc(h.name)} (${esc(h.sym)})</b>：<span style="color:var(--tx)">${esc(r.join("、"))}</span></div>`).join("")}</div>` : `<div class="mu" style="margin-top:6px">目前所有持股皆未觸發出場條件，安心續抱。</div>`}
     ${L.length ? `<table class="tbl" style="margin-top:8px">
-      <tr><th class="l">名稱</th><th>現價</th><th>今日</th><th>市值</th><th>總報酬率</th><th class="l">狀態</th><th>操作</th></tr>
-      ${L.map(h => hrow(h, false)).join("")}
+      <thead><tr><th class="l">名稱</th><th>現價</th><th>今日</th><th>市值</th><th>總報酬率</th><th class="l">狀態</th><th>操作</th></tr></thead>
+      <tbody>${L.map(h => hrow(h, false)).join("")}</tbody>
     </table>` : ""}
   </div>`;
 }
@@ -1386,7 +1384,7 @@ function list() {
     </div>` +
     allocCardHtml(mk) +
     `<div class="card tcard">${L.length ? `<table class="tbl">
-      <tr>
+      <thead><tr>
         ${th("hold", "name", "標的名稱", "l")}
         ${th("hold", "sh", "股數")}
         ${th("hold", "cost", "成本價")}
@@ -1400,8 +1398,8 @@ function list() {
         <th class="l">狀態</th>
         <th class="l">最新營收</th>
         <th>操作</th>
-      </tr>
-      ${L.map(h => hrow(h, true)).join("")}
+      </tr></thead>
+      <tbody>${L.map(h => hrow(h, true)).join("")}</tbody>
     </table>` : `<div class="mu" style="padding:20px">沒有符合條件的持股，可按右上角「＋ 新增持股」建立部位。</div>`}</div>`;
 }
 
