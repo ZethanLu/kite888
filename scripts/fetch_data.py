@@ -13,9 +13,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "data.json"
 TPE = dt.timezone(dt.timedelta(hours=8))
 KEEP = 260  # 網頁只保留近 260 根日 K;策略用 5 年資料計算
-INDICES = [("^TWII", "加權指數", "TW", 23400), ("^TWOII", "櫃買指數", "TW", 268),
-           ("^GSPC", "S&P 500", "US", 5900), ("^IXIC", "那斯達克", "US", 19300),
-           ("^SOX", "費城半導體", "US", 5200)]
+INDICES = [
+    ("^TWII", "加權指數", "TW", 23400),
+    ("^TWOII", "櫃買指數", "TW", 268),
+    ("^GSPC", "S&P 500", "US", 5900),
+    ("^IXIC", "那斯達克", "US", 19300),
+    ("^SOX", "費城半導體", "US", 5200),
+]
 
 
 def load(p, default=None):
@@ -26,8 +30,17 @@ def load(p, default=None):
 
 
 def to_bars(df, keep=KEEP):
-    return [[int(pd.Timestamp(i.date()).timestamp()), round(float(r.open), 2), round(float(r.high), 2),
-             round(float(r.low), 2), round(float(r.close), 2), int(r.volume)] for i, r in df.tail(keep).iterrows()]
+    return [
+        [
+            int(pd.Timestamp(i.date()).timestamp()),
+            round(float(r.open), 2),
+            round(float(r.high), 2),
+            round(float(r.low), 2),
+            round(float(r.close), 2),
+            int(r.volume),
+        ]
+        for i, r in df.tail(keep).iterrows()
+    ]
 
 
 def sample_df(sym, base, n=1260):
@@ -36,14 +49,17 @@ def sample_df(sym, base, n=1260):
     p, rows = 100.0, []
     for _ in range(n):
         o = p
-        c = o * (1 + (r.random() - .48) * .02)
-        h = max(o, c) * (1 + r.random() * .01)
-        l = min(o, c) * (1 - r.random() * .01)
-        rows.append([o, h, l, c, int((.5 + r.random()) * 1e6)])
+        c = o * (1 + (r.random() - 0.48) * 0.02)
+        h = max(o, c) * (1 + r.random() * 0.01)
+        l = min(o, c) * (1 - r.random() * 0.01)
+        rows.append([o, h, l, c, int((0.5 + r.random()) * 1e6)])
         p = c
     f = base / rows[-1][3]
-    return pd.DataFrame([[a * f, b * f, c_ * f, d * f, v] for a, b, c_, d, v in rows],
-                        index=idx, columns=["open", "high", "low", "close", "volume"])
+    return pd.DataFrame(
+        [[a * f, b * f, c_ * f, d * f, v] for a, b, c_, d, v in rows],
+        index=idx,
+        columns=["open", "high", "low", "close", "volume"],
+    )
 
 
 def parse_news(t):
@@ -85,8 +101,10 @@ def fetch_revenue():
     """證交所/櫃買公開資料:每月營收年增率(%)。盡力而為,失敗就回空。"""
     import requests
     out = {}
-    for url in ("https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
-                "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O"):
+    for url in (
+        "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+        "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O",
+    ):
         try:
             r = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
             r.raise_for_status()
@@ -123,15 +141,23 @@ def tables_from_months(months):
     if len(d) < 13:
         return None
     ks = sorted(d)
-    m = [{"p": ymstr(i), "rev": yi(d[i]), "yoy": pct(d[i], d.get(i - 12)), "mom": pct(d[i], d.get(i - 1))} for i in ks[-24:]]
+    m = [
+        {"p": ymstr(i), "rev": yi(d[i]), "yoy": pct(d[i], d.get(i - 12)), "mom": pct(d[i], d.get(i - 1))}
+        for i in ks[-24:]
+    ]
     qsum = {}
     for st in sorted({i - (i % 12) % 3 for i in ks}):
         if all(st + k in d for k in range(3)):
             qsum[st] = sum(d[st + k] for k in range(3))
-    q = [{"p": f"{st // 12}Q{(st % 12) // 3 + 1}", "rev": yi(v), "yoy": pct(v, qsum.get(st - 12)), "qoq": pct(v, qsum.get(st - 3))}
-         for st, v in sorted(qsum.items())[-8:]]
-    ysum = {y: sum(d[y * 12 + k] for k in range(12)) for y in sorted({i // 12 for i in ks})
-            if all(y * 12 + k in d for k in range(12))}
+    q = [
+        {"p": f"{st // 12}Q{(st % 12) // 3 + 1}", "rev": yi(v), "yoy": pct(v, qsum.get(st - 12)), "qoq": pct(v, qsum.get(st - 3))}
+        for st, v in sorted(qsum.items())[-8:]
+    ]
+    ysum = {
+        y: sum(d[y * 12 + k] for k in range(12))
+        for y in sorted({i // 12 for i in ks})
+        if all(y * 12 + k in d for k in range(12))
+    }
     y_t = [{"p": str(y), "rev": yi(v), "yoy": pct(v, ysum.get(y - 1))} for y, v in sorted(ysum.items())[-6:]]
     last = ks[-1]
     yy, n = last // 12, last % 12 + 1
@@ -144,8 +170,15 @@ def tables_from_months(months):
 
 def us_tables(q, a):
     """美股:季/年財報 [(Timestamp, 美元)],沒有月營收。"""
-    qt = [{"p": d.strftime("%Y-%m"), "rev": yi(v), "yoy": pct(v, q[i - 4][1]) if i >= 4 else None,
-           "qoq": pct(v, q[i - 1][1]) if i >= 1 else None} for i, (d, v) in enumerate(q)]
+    qt = [
+        {
+            "p": d.strftime("%Y-%m"),
+            "rev": yi(v),
+            "yoy": pct(v, q[i - 4][1]) if i >= 4 else None,
+            "qoq": pct(v, q[i - 1][1]) if i >= 1 else None,
+        }
+        for i, (d, v) in enumerate(q)
+    ]
     yt = [{"p": d.strftime("%Y"), "rev": yi(v), "yoy": pct(v, a[i - 1][1]) if i >= 1 else None} for i, (d, v) in enumerate(a)]
     return {"m": [], "q": qt[-8:], "y": yt[-6:], "high": False} if qt or yt else None
 
@@ -160,8 +193,11 @@ def fetch_rev_tw(code):
         try:
             r = requests.get("https://api.finmindtrade.com/api/v4/data", params=p, timeout=30)
             r.raise_for_status()
-            months = [(f'{x["revenue_year"]}-{int(x["revenue_month"]):02d}', float(x["revenue"]))
-                      for x in (r.json().get("data") or []) if x.get("revenue") is not None]
+            months = [
+                (f'{x["revenue_year"]}-{int(x["revenue_month"]):02d}', float(x["revenue"]))
+                for x in (r.json().get("data") or [])
+                if x.get("revenue") is not None
+            ]
             return tables_from_months(months)
         except Exception as e:
             print(f"{code} 月營收第 {k + 1} 次失敗:{e}", file=sys.stderr)
@@ -191,11 +227,15 @@ def sample_rev(sym, tw):
     if tw:
         last = mi(dt.datetime.now(TPE).strftime("%Y-%m")) - 1
         base = r.uniform(5e9, 3e11)
-        return tables_from_months([(ymstr(last - 119 + k), base * (1 + .012 * k) * (1 + (r.random() - .5) * .25)) for k in range(120)])
+        return tables_from_months(
+            [(ymstr(last - 119 + k), base * (1 + 0.012 * k) * (1 + (r.random() - 0.5) * 0.25)) for k in range(120)]
+        )
     qd = [pd.Timestamp("2026-09-30") - pd.DateOffset(months=3 * k) for k in range(7, -1, -1)]
     b = r.uniform(5e9, 3e10)
-    return us_tables([(d, b * (1 + .03 * k) * (1 + (r.random() - .5) * .1)) for k, d in enumerate(qd)],
-                     [(pd.Timestamp(f"{y}-12-31"), b * 4 * (1 + .12 * (y - 2022))) for y in range(2022, 2026)])
+    return us_tables(
+        [(d, b * (1 + 0.03 * k) * (1 + (r.random() - 0.5) * 0.1)) for k, d in enumerate(qd)],
+        [(pd.Timestamp(f"{y}-12-31"), b * 4 * (1 + 0.12 * (y - 2022))) for y in range(2022, 2026)],
+    )
 
 
 def fetch_news_tw(code, name):
@@ -203,8 +243,11 @@ def fetch_news_tw(code, name):
     import requests
     q = urllib.parse.quote_plus(f"{code} {name}".strip())
     try:
-        r = requests.get(f"https://news.google.com/rss/search?q={q}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant", timeout=20,
-                         headers={"User-Agent": "Mozilla/5.0"})
+        r = requests.get(
+            f"https://news.google.com/rss/search?q={q}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant",
+            timeout=20,
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
         r.raise_for_status()
         out = []
         for it in ET.fromstring(r.content).iter("item"):
@@ -264,9 +307,16 @@ def main():
         df, _ = get(sym, base)
         if df is not None:
             ok += 1
-            indices[sym] = {"name": name, "m": m, "bars": to_bars(df), "wk": to_bars(resample(df, "W-FRI"), 130),
-                            "mo": to_bars(resample(df, "ME"), 60), "regime": regime(df), "rg": regime_info(df),
-                            "asof": df.index[-1].strftime("%Y-%m-%d")}
+            indices[sym] = {
+                "name": name,
+                "m": m,
+                "bars": to_bars(df),
+                "wk": to_bars(resample(df, "W-FRI"), 130),
+                "mo": to_bars(resample(df, "ME"), 60),
+                "regime": regime(df),
+                "rg": regime_info(df),
+                "asof": df.index[-1].strftime("%Y-%m-%d"),
+            }
         elif sym in old.get("indices", {}):
             indices[sym] = old["indices"][sym]
     for sym, base in syms:
@@ -274,13 +324,24 @@ def main():
         if df is not None:
             ok += 1
             tw = sym.endswith((".TW", ".TWO"))
-            e = {"bars": to_bars(df), "wk": to_bars(resample(df, "W-FRI"), 130), "mo": to_bars(resample(df, "ME"), 60), "news": nw, "asof": df.index[-1].strftime("%Y-%m-%d"), "sig": None}
+            e = {
+                "bars": to_bars(df),
+                "wk": to_bars(resample(df, "W-FRI"), 130),
+                "mo": to_bars(resample(df, "ME"), 60),
+                "news": nw,
+                "asof": df.index[-1].strftime("%Y-%m-%d"),
+                "sig": None,
+            }
             code, item, prev_e = sym.split(".")[0], items.get(sym, {}), old.get("stocks", {}).get(sym, {})
             rv = sample_rev(sym, tw) if a.sample else (fetch_rev_tw(code) if tw else fetch_rev_us(sym))
             e["rev"] = rv or prev_e.get("rev")
             nm = item.get("name", "")
             if tw:
-                nt = [{"title": "(範例)新聞標題", "link": "#", "pub": "範例", "d": "11/11"}] if a.sample else fetch_news_tw(code, "" if nm == sym else nm)
+                nt = (
+                    [{"title": "(範例)新聞標題", "link": "#", "pub": "範例", "d": "11/11"}]
+                    if a.sample
+                    else fetch_news_tw(code, "" if nm == sym else nm)
+                )
                 e["news_tw"] = nt or prev_e.get("news_tw", [])
             try:
                 e["sig"] = scan(df, tw)
@@ -296,7 +357,8 @@ def main():
             stocks[sym] = old["stocks"][sym]
     if ok == 0:
         sys.exit("全部抓取失敗,保留舊資料")
-   fx_usdtwd = 32.2
+
+    fx_usdtwd = 32.2
     if not a.sample:
         try:
             import yfinance as yf
@@ -309,12 +371,13 @@ def main():
     data = {
         "updated": now.strftime("%Y-%m-%d %H:%M"),
         "updated_date": now.strftime("%Y-%m-%d"),
-        "fx_usdtwd": fx_usdtwd,  # <--- 新增這行匯率欄位
+        "fx_usdtwd": fx_usdtwd,
         "sample": a.sample,
         "holdings": H,
         "watchlist": W,
         "indices": indices,
-        "stocks": stocks}
+        "stocks": stocks,
+    }
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"完成:{ok} 檔成功,更新時間 {data['updated']}")
