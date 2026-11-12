@@ -3,58 +3,87 @@
 <head>
 <meta charset="utf-8">
 <title>STOCK WEB 持股儀表板</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{box-sizing:border-box;color-scheme:light;--bg:#f1f3f8;--card:#fff;--tx:#1b2330;--mu:#6b7686;--ac:#0f9d83;--acbg:#dff4ef;--r:#e0453a;--g:#12a36b;--st:#ea7c1e;--tpc:#8b5cf6;--bd:#e3e7ee;--warnbg:#fff1dc}
+:root{box-sizing:border-box;color-scheme:light;--bg:#f3f5f9;--card:#fff;--tx:#1b2330;--mu:#6b7686;--ac:#0f9d83;--acbg:#dff4ef;--r:#e0453a;--g:#12a36b;--st:#ea7c1e;--tpc:#8b5cf6;--bd:#e3e7ee;--warnbg:#fff1dc}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#93a0b0;--ac:#35c7a8;--acbg:#16352e;--r:#ff6b5f;--g:#3dd68c;--bd:#2a3441;--warnbg:#3b2a14}}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#0f141b;--card:#18202a;--tx:#e8edf3;--mu:#93a0b0;--ac:#35c7a8;--acbg:#16352e;--r:#ff6b5f;--g:#3dd68c;--bd:#2a3441;--warnbg:#3b2a14}
 *{box-sizing:border-box}
-body{margin:0;padding:env(safe-area-inset-top,0px) 0 calc(76px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--tx);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.5}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--card);border-bottom:1px solid var(--bd);padding:12px 18px;display:flex;gap:12px;align-items:baseline}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
-.logo{color:var(--ac);font-weight:800;letter-spacing:.12em}
-main{max-width:720px;margin:0 auto;padding:14px}
-.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.mu{color:var(--mu);font-size:13px}.big{font-size:26px;font-weight:700;line-height:1.2}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.sec{margin:16px 2px 8px;font-weight:700}
-.note{background:var(--acbg);color:var(--ac);border-radius:10px;padding:8px 12px;font-size:12px;margin-bottom:12px}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:14px;line-height:1.55;min-width:1000px}
+#shell{display:flex;min-height:100vh}
+#side{width:208px;flex:none;position:sticky;top:0;height:100vh;background:var(--card);border-right:1px solid var(--bd);padding:20px 12px;display:flex;flex-direction:column}
+.brand{color:var(--ac);font-weight:800;letter-spacing:.12em;font-size:16px;padding:2px 12px 20px}
+#side nav{display:flex;flex-direction:column;gap:4px}
+#side nav button{text-align:left;border:0;background:none;padding:10px 14px;border-radius:8px;color:var(--mu);font:inherit;font-size:14.5px;cursor:pointer}
+#side nav button:hover{background:var(--bg);color:var(--tx)}
+#side nav button.on{background:var(--acbg);color:var(--ac);font-weight:700}
+.sidefoot{margin-top:auto;padding:10px 12px}
+#main{flex:1;min-width:0}
+#top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:10px 28px;background:var(--card);border-bottom:1px solid var(--bd);min-height:57px}
+#ttl{font-size:17px}
+.search{position:relative;width:min(460px,38vw)}
+.rs{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16);max-height:360px;overflow:auto;z-index:30}.rs:empty{display:none}
+.rs div{padding:9px 14px;border-top:1px solid var(--bd);cursor:pointer}.rs div:first-child{border-top:0}.rs div:hover{background:var(--bg)}
+.sp{flex:1}
+#app{padding:22px 28px 56px;max-width:1640px}
+.card{background:var(--card);border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid var(--bd)}
+.card.item:hover{border-color:var(--ac)}
+.mu{color:var(--mu);font-size:12.5px}.big{font-size:26px;font-weight:700;line-height:1.25}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+.grid>.card{margin:0}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}.dl,.dr{min-width:0}
+@media (max-width:1100px){.cols2{grid-template-columns:1fr}.dgrid{grid-template-columns:1fr}}
+.sec{margin:2px 2px 10px;font-weight:700;font-size:15px}
+.note{background:var(--acbg);color:var(--ac);border-radius:10px;padding:9px 14px;font-size:13px;margin-bottom:16px}
 .note.w{background:var(--warnbg);color:var(--st)}
-.alert{background:var(--warnbg);border-radius:12px;padding:12px;margin-top:10px}.alert b{color:var(--st)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.alert{background:var(--warnbg);border-radius:10px;padding:12px 14px;margin-top:10px}.alert b{color:var(--st)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .chip{font-size:12px;border-radius:99px;padding:2px 10px;background:var(--acbg);color:var(--ac);white-space:nowrap}
 .chip.bad{background:var(--warnbg);color:var(--st)}
-.seg{display:flex;gap:6px;margin-bottom:12px}
-button,input{font:inherit;color:var(--tx)}
-.seg button,.back{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
+.chip.r{background:color-mix(in srgb,var(--r) 15%,transparent);color:var(--r)}.chip.g{background:color-mix(in srgb,var(--g) 15%,transparent);color:var(--g)}
+.seg{display:flex;gap:6px;margin-bottom:14px}
+button,input,select,textarea{font:inherit;color:var(--tx)}
+.seg button,.back,.btn{border:1px solid var(--bd);background:var(--card);border-radius:8px;padding:6px 16px;cursor:pointer}
+.seg button:hover,.back:hover,.btn:hover{border-color:var(--ac)}
 .seg button.on{background:var(--acbg);color:var(--ac);border-color:var(--ac)}
-input{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px}
-.item,.rs div{cursor:pointer}.rs div{padding:8px 4px;border-top:1px solid var(--bd)}
-.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.kv div{background:var(--bg);border-radius:10px;padding:8px 10px}.kv b{display:block;font-size:16px}
+.btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}.btn:disabled{opacity:.6;cursor:wait}
+input,select,textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:8px;padding:8px 10px}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--ac) 40%,transparent);border-color:var(--ac)}
+input[type=checkbox]{width:auto;margin-right:6px}
+.item{cursor:pointer}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.kv div{background:var(--bg);border-radius:8px;padding:8px 12px}.kv b{display:block;font-size:16px}
 .bar{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--st),var(--bd) 35%,var(--bd) 65%,var(--tpc));margin:22px 0 6px}
 .bar i{position:absolute;top:-5px;width:4px;height:18px;border-radius:2px;background:var(--tx)}
 ul{margin:6px 0 0;padding-left:18px}li{margin:6px 0}a{color:var(--ac)}
 svg{width:100%;height:auto;display:block}.gl{stroke:var(--bd);stroke-width:.5}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
-nav button{flex:1;max-width:240px;border:0;background:none;color:var(--mu);padding:10px 0 12px;cursor:pointer}
-nav button.on{color:var(--ac);font-weight:700}
-select{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
 details summary{cursor:pointer}
-input[type=checkbox]{width:auto;margin-right:6px}
+.dtl{margin-bottom:16px}.dtl>summary{display:inline-block;list-style:none}.dtl>summary::-webkit-details-marker{display:none}.dtl>.card{max-width:720px;margin-top:10px}
+.ed{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.ed label{font-size:12px;color:var(--mu)}.ed .f{grid-column:1/-1}
 .ed .ck label{display:block;font-size:14px;color:var(--tx);margin:4px 0}.ed .ck>label:first-child{font-size:12px;color:var(--mu);margin:0 0 2px}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:7px 4px;text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:400;font-size:12px}tr+tr td{border-top:1px solid var(--bd)}
-.chip.r{background:color-mix(in srgb,var(--r) 15%,transparent);color:var(--r)}.chip.g{background:color-mix(in srgb,var(--g) 15%,transparent);color:var(--g)}
-.btn{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:6px 16px;cursor:pointer}
-.btn.p{background:var(--ac);color:#fff;border-color:var(--ac)}
-textarea{width:100%;border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:8px 10px;font:inherit;color:var(--tx)}
-.ed{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.ed label{font-size:12px;color:var(--mu)}.ed .f{grid-column:1/-1}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:8px 8px;text-align:right}th:first-child,td:first-child{text-align:left}
+th{color:var(--mu);font-weight:500;font-size:12px;white-space:nowrap}
+tr+tr td{border-top:1px solid var(--bd)}
+.tbl th,.tbl td{padding:10px 10px}.tbl th.l,.tbl td.l{text-align:left}
+.tbl th{position:sticky;top:57px;background:var(--card);z-index:2;border-bottom:1px solid var(--bd)}
+.tbl tr.item:hover td{background:var(--bg)}
+th[data-sort]{cursor:pointer;user-select:none}th[data-sort]:hover{color:var(--tx)}
+.tcard{padding:6px 10px}
+.ax{font-size:11px;fill:var(--mu)}.hl{font-size:11px;fill:var(--tx)}.xh{stroke:var(--tx);stroke-width:.8;stroke-dasharray:3 2;opacity:.7}.cinfo{min-height:48px;margin:6px 0 4px}
 </style>
 </head>
 <body>
-<header><span class="logo">STOCK WEB</span><b id="ttl">總覽</b><button class="back" id="hb" hidden style="margin-left:auto">← 返回</button></header>
-<main><div class="card" style="padding:10px"><input id="q" placeholder="搜尋個股:代號或名稱,例如 2330、台積電、NVDA" autocomplete="off"><div class="rs" id="rs"></div></div><div id="app"></div></main>
-<nav><button data-t="home" class="on">總覽</button><button data-t="hold">持股</button><button data-t="watch">觀察</button></nav>
+<div id="shell">
+<aside id="side"><div class="brand">STOCK WEB</div>
+<nav><button data-t="home" class="on">總覽</button><button data-t="hold">持股</button><button data-t="watch">觀察清單</button><button data-t="set">設定</button></nav>
+<div class="sidefoot mu" id="verinfo"></div></aside>
+<div id="main"><header id="top"><button class="back" id="hb" hidden>← 返回</button><b id="ttl">總覽</b>
+<div class="search"><input id="q" placeholder="搜尋個股:代號或名稱,例如 2330、台積電、NVDA" autocomplete="off"><div class="rs" id="rs"></div></div>
+<span class="sp"></span><span class="mu" id="updinfo"></span><button class="btn p" id="upd">更新資料</button></header>
+<main id="app"></main></div></div>
 <script>
 const $=s=>document.querySelector(s);
 const fmt=(n,d=2)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -64,7 +93,7 @@ const ma=(a,n)=>a.map((_,i)=>i<n-1?null:a.slice(i-n+1,i+1).reduce((x,y)=>x+y,0)/
 const mkt=s=>/\.TWO?$|^\^TW/.test(s)?"TW":"US",cur=m=>m==="TW"?"NT$":"US$";
 const cc=v=>v>=0?"var(--r)":"var(--g)",sgn=v=>(v>=0?"+":"−")+fmt(Math.abs(v));
 const UP="var(--r)",DN="var(--g)";
-const N={d:60,w:52,m:36},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d",RV=null;const VER="v13-觀察標記";let UPD="",WF="all";const TAGS=["打工型","上班型","老闆型","市值排列","其他"];
+const N={d:120,w:104,m:60},TFN={d:"日 K",w:"週 K",m:"月 K"},TFU={d:"日",w:"週",m:"個月"};let TF="d",RV=null;const VER="v15-電腦版";let UPD="",WF="all";const TAGS=["打工型","上班型","老闆型","市值排列","其他"];
 const RS={"stop": [["m_osc_down", "月 MACD 柱體比上月差"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["w_close_down", "週收盤比上週差(週五判斷)"], ["below_w5", "收盤跌破 5 週均線"], ["below_ma20", "收盤跌破 20 日線"], ["below_ma60", "收盤跌破 60 日線(季線)"], ["below_ma120", "收盤跌破 120 日線(半年線)"], ["below_prev_wlow", "收盤跌破上週最低點"], ["below_entry_low", "收盤跌破進場日低點"], ["loss5", "虧損達 -5%"]], "tp": [["w_close_down", "週收盤比上週差(週五判斷)"], ["w_high_fail", "當週最高價未創前週新高(週五判斷)"], ["w_osc_down", "週 MACD 柱體比上週差(週五判斷)"], ["m_osc_down", "月 MACD 柱體比上月差"], ["below_ma5", "收盤跌破 5 日線"], ["below_w5", "收盤跌破 5 週均線"], ["fall_back", "獲利跌回門檻(保本)"]]};
 const RG={STRONG_WIND:"強風",CHOPPY:"亂流",GUST:"陣風",NO_WIND:"無風"},RGT={STRONG_WIND:"勝率偏高的行情",CHOPPY:"行情震盪,嚴守紀律",GUST:"開始起風,嘗試交易",NO_WIND:"勝率很低,多做多賠!"},GOV={TW:"^TWOII",US:"^SOX"};
 const rgChip=r=>`<span class="chip ${r==="STRONG_WIND"||r==="GUST"?"r":"g"}">${RG[r]}</span>`;
@@ -82,7 +111,7 @@ function gh(){let o="",r="";if(typeof location!=="undefined"&&location.hostname.
 return{o:LS.get("gh_o")||o,r:LS.get("gh_r")||r,b:LS.get("gh_b")||"main",t:LS.get("gh_t")||""}}
 const b64e=s=>{let b="";new TextEncoder().encode(s).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
 const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")),c=>c.charCodeAt(0)));
-async function api(path,opt={}){const g=gh();if(!g.t||!g.o||!g.r)throw new Error("請先在總覽頁最下方設定 GitHub 連線(帳號、repo 與存取權杖)");
+async function api(path,opt={}){const g=gh();if(!g.t||!g.o||!g.r)throw new Error("請先到左側「設定」頁設定 GitHub 連線(帳號、repo 與存取權杖)");
 const isGet=!opt.method,res=await fetch(`https://api.github.com/repos/${g.o}/${g.r}/${path}${isGet?(path.includes("?")?"&":"?")+"_="+Date.now():""}`,{...opt,cache:"no-store",headers:{Authorization:`Bearer ${g.t}`,Accept:opt.accept||"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"}});
 if(!res.ok){let d="";try{d=(await res.json()).message||""}catch(x){}const e=new Error((res.status===401?"權杖無效或已過期":res.status===403||res.status===404?"沒有權限或找不到 repo,請檢查權杖權限與 repo 名稱":res.status===409?"檔案剛被更新過,請重新整理頁面後再試一次":`GitHub 回應 ${res.status}`)+(d?`(${d})`:""));e.status=res.status;throw e}
 return res.status===204?null:res.json()}
@@ -101,7 +130,7 @@ catch(e){set("");say("更新失敗:"+e.message+(e.status===403||e.status===404?"
 const say=(t,w)=>{MSG={t,w}};
 function msgHtml(){const m=MSG;MSG=null;return m?`<div class="note${m.w?" w":""}">${esc(m.t)}</div>`:""}
 async function run(fn,needData,okText){try{const cfg=await fn();DB.holdings=cfg.holdings;DB.watchlist=cfg.watchlist;let t=okText||"已儲存到 GitHub。";
-if(needData)t+=" 要取得新資料(價格、線圖、營收、新聞、策略評估),請按頁面上的「更新資料」按鈕。";say(t)}catch(e){say("儲存失敗:"+e.message,1)}render()}
+if(needData)t+=" 要取得新資料(價格、線圖、營收、新聞、策略評估),請按右上角的「更新資料」。";say(t)}catch(e){say("儲存失敗:"+e.message,1)}render()}
 function editor(sym,h){const inW=DB.watchlist.some(w=>w.sym===sym),v=k=>h&&h[k]!=null?esc(h[k]):"";
 return `<div class="card" id="edcard"><b>${h?"編輯持股":"加入持股"}</b><div class="ed"><div><label>名稱</label><input id="e_n" value="${esc(nameOf(sym))}"></div><div><label>股數</label><input id="e_sh" type="number" step="any" value="${v("shares")}"></div><div><label>成本價</label><input id="e_cost" type="number" step="any" value="${v("cost")}"></div><div><label>預計停損價</label><input id="e_stop" type="number" step="any" value="${v("stop")}"></div><div><label>預計停利價</label><input id="e_tp" type="number" step="any" value="${v("tp")}"></div><div><label>策略</label><select id="e_st"><option value="">未指定</option>${["A","B","C","D"].map(k=>`<option value="${k}"${h&&h.strategy===k?" selected":""}>${k}・${ST[k]}</option>`).join("")}</select></div><div><label>進場日期</label><input id="e_ed" type="date" value="${v("entry_date")}"></div><div class="f"><label>買進原因</label><textarea id="e_why" rows="2">${v("why")}</textarea></div><div class="f"><label>出場規則(備註)</label><input id="e_rule" value="${v("rule")}"></div><div class="f ck"><label>自訂停損條件(任一觸發即出場)</label>${RS.stop.map(([id,lb])=>`<label><input type="checkbox" name="rs" value="${id}"${h&&h.rules&&(h.rules.stop||[]).includes(id)?" checked":""}>${esc(lb)}</label>`).join("")}</div><div class="f ck"><label>自訂停利條件(獲利達門檻後,任一觸發即出場)</label>${RS.tp.map(([id,lb])=>`<label><input type="checkbox" name="rt" value="${id}"${h&&h.rules&&(h.rules.tp||[]).includes(id)?" checked":""}>${esc(lb)}</label>`).join("")}</div><div><label>停利啟用的獲利門檻 %</label><input id="e_ta" type="number" step="any" placeholder="10" value="${v("tp_after")}"></div></div><div class="row" style="margin-top:12px"><button class="btn p" id="sv">儲存到 GitHub</button>${h?`<button class="btn" id="rm">移除持股</button>`:inW?`<button class="btn" id="rmw">移除觀察</button>`:""}</div><div class="mu" style="margin-top:8px">儲存會直接修改 repo 裡的 holdings.json。策略 D 的時間停損、進場日低點,以及放風箏階段的最高損益,都需要填進場日期才算得準。</div></div>`}
 let GOEDIT=false;
@@ -132,25 +161,33 @@ const TMP={};
 const nameOf=s=>(held(s)||DB.watchlist.find(w=>w.sym===s)||{}).name||TMP[s]||(DB.indices[s]||{}).name||s;
 const stat=(h,p)=>{const e=ex(h);return e&&e.state==="EXIT"?["bad","觸發出場訊號"]:p<=h.stop?["bad","已碰停損線"]:p>=h.tp*.97?["bad","接近停利"]:["","持有中"]};
 /* 圖表 */
-function kline(d,ln){const W=340,Hh=180,bw=W/d.length,m20=ma(d.map(k=>k.c),20);ln=ln.filter(l=>Number.isFinite(l.y)&&l.y>0);
-const all=d.flatMap(k=>[k.h,k.l]).concat(ln.map(l=>l.y)),lo=Math.min(...all)*.995,hi=Math.max(...all)*1.005,y=v=>4+(hi-v)/(hi-lo)*(Hh-8);
-let s=`<svg viewBox="0 0 ${W} ${Hh}">`;for(let i=1;i<4;i++)s+=`<line class="gl" x1="0" x2="${W}" y1="${Hh/4*i}" y2="${Hh/4*i}"/>`;
-d.forEach((k,i)=>{const x=i*bw+bw/2,c=k.c>=k.o?UP:DN;s+=`<line x1="${x}" x2="${x}" y1="${y(k.h)}" y2="${y(k.l)}" stroke="${c}"/><rect x="${x-bw*.32}" y="${y(Math.max(k.o,k.c))}" width="${bw*.64}" height="${Math.max(1,Math.abs(y(k.o)-y(k.c)))}" fill="${c}"/>`});
-s+=`<polyline fill="none" stroke="#e8a317" stroke-width="1.2" points="${m20.map((v,i)=>v==null?"":`${i*bw+bw/2},${y(v)}`).join(" ")}"/>`;
-ln.forEach(l=>s+=`<line x1="0" x2="${W}" y1="${y(l.y)}" y2="${y(l.y)}" stroke="${l.c}" stroke-dasharray="4 3"/><text x="${W-2}" y="${y(l.y)-2}" text-anchor="end" font-size="9" fill="${l.c}">${l.t} ${fmt(l.y)}</text>`);return s+`</svg>`}
-function vol(d){const W=340,Hh=50,bw=W/d.length,mx=Math.max(...d.map(k=>k.v))||1;return `<svg viewBox="0 0 ${W} ${Hh}">`+d.map((k,i)=>`<rect x="${i*bw+bw*.18}" y="${Hh-k.v/mx*Hh}" width="${bw*.64}" height="${k.v/mx*Hh}" fill="${k.c>=k.o?UP:DN}" opacity=".8"/>`).join("")+`</svg>`}
-function macd(f,n){const W=340,Hh=80,c=f.map(k=>k.c),e12=ema(c,12),e26=ema(c,26),dif=e12.map((v,i)=>v-e26[i]),dea=ema(dif,9),his=dif.map((v,i)=>(v-dea[i])*2);
-const D=dif.slice(-n),E=dea.slice(-n),B=his.slice(-n),mx=Math.max(...D.map(Math.abs),...E.map(Math.abs),...B.map(Math.abs))||1,bw=W/n,y=v=>Hh/2-v/mx*(Hh/2-4),pl=a=>a.map((v,i)=>`${i*bw+bw/2},${y(v)}`).join(" ");
-return `<svg viewBox="0 0 ${W} ${Hh}"><line class="gl" x1="0" x2="${W}" y1="${Hh/2}" y2="${Hh/2}"/>`+B.map((v,i)=>`<rect x="${i*bw+bw*.2}" y="${Math.min(y(v),Hh/2)}" width="${bw*.6}" height="${Math.abs(y(v)-Hh/2)}" fill="${v>=0?UP:DN}" opacity=".75"/>`).join("")+`<polyline fill="none" stroke="#3b82f6" stroke-width="1.2" points="${pl(D)}"/><polyline fill="none" stroke="#e8a317" stroke-width="1.2" points="${pl(E)}"/></svg>`}
-function spark(d,ch){d=d.slice(-40).map(k=>k.c);const lo=Math.min(...d),hi=Math.max(...d);return `<svg viewBox="0 0 340 38" preserveAspectRatio="none" style="height:38px"><polyline points="${d.map((v,i)=>`${i*340/(d.length-1)},${34-(v-lo)/(hi-lo||1)*30}`).join(" ")}" fill="none" stroke="${cc(ch)}" stroke-width="2"/></svg>`}
+let CW=900,PR=56,PW=CW-PR;const setCW=w=>{CW=Math.max(520,Math.floor(w));PW=CW-PR},KH=380,VH=90,MH=130;
+const pf=v=>v>=1000?fmt(v,0):v>=100?fmt(v,1):fmt(v,2),fmtVol=v=>v>=1e8?fmt(v/1e8,2)+"億":v>=1e4?fmt(v/1e4,0)+"萬":fmt(v,0);
+const chartW=()=>{const aw=($("#app")&&$("#app").clientWidth)||1100;return Math.min(1180,aw>=1000?aw-400-16-40:aw-40)};
+const XH=H=>`<line class="xh" x1="0" x2="0" y1="0" y2="${H}" visibility="hidden"/>`;
+function kline(d,ln){const Hh=KH,bw=PW/d.length,m20=ma(d.map(k=>k.c),20);ln=ln.filter(l=>Number.isFinite(l.y)&&l.y>0);
+const cl=Math.min(...d.map(k=>k.l)),chh=Math.max(...d.map(k=>k.h)),sp=chh-cl||chh*.02,inR=l=>l.y>=cl-sp*.6&&l.y<=chh+sp*.6;
+const all=d.flatMap(k=>[k.h,k.l]).concat(ln.filter(inR).map(l=>l.y)),lo=Math.min(...all)*.995,hi=Math.max(...all)*1.005,y=v=>10+(hi-v)/(hi-lo)*(Hh-20);
+let s=`<svg class="cs" viewBox="0 0 ${CW} ${Hh}">`;
+for(let i=0;i<8;i++){const v=hi-(hi-lo)*i/7,yy=y(v);s+=`<line class="gl" x1="0" x2="${PW}" y1="${yy}" y2="${yy}"/><text class="ax" x="${CW-3}" y="${yy+4}" text-anchor="end">${pf(v)}</text>`}
+d.forEach((k,i)=>{const x=i*bw+bw/2,c=k.c>=k.o?UP:DN;s+=`<line x1="${x}" x2="${x}" y1="${y(k.h)}" y2="${y(k.l)}" stroke="${c}"/><rect x="${x-bw*.34}" y="${y(Math.max(k.o,k.c))}" width="${bw*.68}" height="${Math.max(1,Math.abs(y(k.o)-y(k.c)))}" fill="${c}"/>`});
+s+=`<polyline fill="none" stroke="#e8a317" stroke-width="1.4" points="${m20.map((v,i)=>v==null?"":`${i*bw+bw/2},${y(v)}`).join(" ")}"/>`;
+let ly0=-99;[...ln].sort((a,b)=>b.y-a.y).forEach(l=>{const o=!inR(l),yy=o?(l.y>chh?10:Hh-10):y(l.y);let ty=Math.max(yy-3,ly0+14);ly0=ty;s+=`<line x1="0" x2="${PW}" y1="${yy}" y2="${yy}" stroke="${l.c}" stroke-dasharray="5 4"/><text x="${PW-4}" y="${ty}" text-anchor="end" font-size="11" fill="${l.c}">${l.t} ${pf(l.y)}${o?(l.y>chh?" ↑":" ↓"):""}</text>`});
+let hI=0,lI=0;d.forEach((k,i)=>{if(k.h>d[hI].h)hI=i;if(k.l<d[lI].l)lI=i});
+const an=x=>x>PW-40?"end":x<40?"start":"middle";
+s+=`<text class="hl" x="${(hI+.5)*bw}" y="${y(d[hI].h)-4}" text-anchor="${an((hI+.5)*bw)}">${pf(d[hI].h)}</text><text class="hl" x="${(lI+.5)*bw}" y="${y(d[lI].l)+13}" text-anchor="${an((lI+.5)*bw)}">${pf(d[lI].l)}</text>`;
+const lk=d[d.length-1],lc=d.length>1&&lk.c<d[d.length-2].c?DN:UP,ly=y(lk.c);
+s+=`<rect x="${PW+1}" y="${ly-9}" width="${PR-3}" height="18" rx="3" fill="${lc}"/><text x="${CW-5}" y="${ly+4}" text-anchor="end" font-size="11" fill="#fff">${pf(lk.c)}</text>`;
+return s+XH(Hh)+`</svg>`}
+function vol(d){const Hh=VH,bw=PW/d.length,mx=Math.max(...d.map(k=>k.v))||1;return `<svg class="cs" viewBox="0 0 ${CW} ${Hh}">`+d.map((k,i)=>`<rect x="${i*bw+bw*.16}" y="${Hh-k.v/mx*(Hh-4)}" width="${bw*.68}" height="${k.v/mx*(Hh-4)}" fill="${k.c>=k.o?UP:DN}" opacity=".8"/>`).join("")+`<text class="ax" x="${CW-3}" y="11" text-anchor="end">${fmtVol(mx)}</text>`+XH(Hh)+`</svg>`}
+function macd(f,n){const Hh=MH,c=f.map(k=>k.c),e12=ema(c,12),e26=ema(c,26),dif=e12.map((v,i)=>v-e26[i]),dea=ema(dif,9),his=dif.map((v,i)=>(v-dea[i])*2);
+const D=dif.slice(-n),E=dea.slice(-n),B=his.slice(-n),mx=Math.max(...D.map(Math.abs),...E.map(Math.abs),...B.map(Math.abs))||1,bw=PW/n,y=v=>Hh/2-v/mx*(Hh/2-6),pl=a=>a.map((v,i)=>`${i*bw+bw/2},${y(v)}`).join(" ");
+return `<svg class="cs" viewBox="0 0 ${CW} ${Hh}"><line class="gl" x1="0" x2="${PW}" y1="${Hh/2}" y2="${Hh/2}"/><text class="ax" x="${CW-3}" y="${Hh/2+4}" text-anchor="end">0</text><text class="ax" x="${CW-3}" y="12" text-anchor="end">${fmt(mx)}</text><text class="ax" x="${CW-3}" y="${Hh-4}" text-anchor="end">−${fmt(mx)}</text>`+B.map((v,i)=>`<rect x="${i*bw+bw*.2}" y="${Math.min(y(v),Hh/2)}" width="${bw*.6}" height="${Math.abs(y(v)-Hh/2)}" fill="${v>=0?UP:DN}" opacity=".75"/>`).join("")+`<polyline fill="none" stroke="#3b82f6" stroke-width="1.4" points="${pl(D)}"/><polyline fill="none" stroke="#e8a317" stroke-width="1.4" points="${pl(E)}"/>`+XH(Hh)+`</svg>`}
+function spark(d,ch){d=d.slice(-40).map(k=>k.c);const lo=Math.min(...d),hi=Math.max(...d);return `<svg viewBox="0 0 340 38" preserveAspectRatio="none" style="height:46px"><polyline points="${d.map((v,i)=>`${i*340/(d.length-1)},${34-(v-lo)/(hi-lo||1)*30}`).join(" ")}" fill="none" stroke="${cc(ch)}" stroke-width="2"/></svg>`}
 /* 頁面 */
-const banner=()=>`<div class="note${DB.sample?" w":""}"><div class="row"><span>${DB.sample?"目前是範例資料,按「更新資料」抓取真實資料。":""}資料更新時間:${esc(DB.updated)}(台北時間)・頁面版本 ${VER}</span><button class="btn p" id="upd" style="padding:4px 14px;white-space:nowrap"${UPD?" disabled":""}>${UPD||"更新資料"}</button></div></div>`;
+const banner=()=>DB.sample?`<div class="note w">目前是範例資料,按右上角「更新資料」抓取真實資料。</div>`:"";
 function rgLine(m){const x=DB.indices[GOV[m]];if(!x||!x.regime)return"";const i=x.rg;
 return `<div class="card" style="margin-bottom:12px;padding:12px"><div class="row"><span>風度圖(依${esc(x.name)})</span>${rgChip(x.regime)}</div><div style="margin-top:6px"><b>${RGT[x.regime]}</b></div><div class="mu">${RGN[x.regime]}</div>${i?`<div class="mu" style="margin-top:6px">${esc(x.name)} ${fmt(i.close)} ${i.close>=i.ma20?"≥":"<"} 20MA ${fmt(i.ma20)};MACD 柱 ${fmt(i.osc,3)} ${i.osc>i.osc_prev?">":"<"} 前一交易日 ${fmt(i.osc_prev,3)}</div>`:""}</div>`}
-function holdRows(){if(!DB.holdings.length)return"";return `<div class="mu" style="margin-top:12px">點選個股查看持倉狀況</div>`+DB.holdings.map(h=>{const Q=quote(h.sym),nm=`<b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span>`;
-if(!Q)return `<div class="row item" data-s="${esc(h.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span class="mu">尚無資料</span></div>`;
-const pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
-return `<div class="row item" data-s="${esc(h.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}<br><span class="mu">現價 ${fmt(Q.px)}・成本 ${fmt(h.cost)}</span></span><span style="text-align:right"><b style="color:${cc(pc)}">${sgn(pc)}%</b><br><span class="chip ${k}">${t}</span></span></div>`}).join("")}
 function sigCard(){const rows=Object.keys(DB.stocks).map(sym=>{const sg=DB.stocks[sym].sig;if(!sg)return"";const ok=["A","B","C","D"].filter(k=>sg[k]&&sg[k].ok);if(!ok.length)return"";const al=allowed(sym);
 return `<div class="row item" data-s="${esc(sym)}" style="margin-top:8px"><span><b>${esc(nameOf(sym))}</b> <span class="mu">${esc(sym)}</span></span><span>${ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" ")}</span></div>`}).join("");
 return `<div class="card"><b>策略進場訊號</b><div class="mu" style="margin:4px 0">A 週拉回風箏、B 廉價收購、C 週趨勢風箏、D 強勢週風箏。掃描範圍是持股與觀察清單;橘色代表目前大盤風度不允許這個策略。</div>${rows||`<div class="mu">目前沒有個股符合進場條件</div>`}</div>`}
@@ -172,16 +209,19 @@ const wfRow=all=>{const c=k=>k==="all"?all.length:k==="none"?all.filter(w=>!w.ta
 function tagCard(sym){const w=DB.watchlist.find(x=>x.sym===sym);if(!w||held(sym))return"";return `<div class="card"><b>觀察策略標記</b><div class="mu" style="margin:6px 0">自己標記這檔為什麼列入觀察。</div><div class="ed">${tagFields("t",w)}</div><button class="btn p" id="svt" style="margin-top:10px">儲存標記</button></div>`}
 function saveTag(){const sym=sel,tg=$("#t_t").value,rs=$("#t_r").value.trim();if(tg==="其他"&&!rs){say("選「其他」請填寫原因。",1);return render()}
 run(()=>mutate(cfg=>{const w=cfg.watchlist.find(x=>x.sym===sym);if(!w)return;if(tg)w.tag=tg;else delete w.tag;if(rs)w.tag_note=rs;else delete w.tag_note},`watchlist: tag ${sym}`),false,"已儲存標記。")}
-function watchMini(){const L=DB.watchlist.filter(w=>!held(w.sym)).slice(0,5);if(!L.length)return `<div class="card" style="margin-top:12px"><b>觀察清單</b><div class="mu" style="margin-top:6px">還沒有觀察個股,按上方「觀察清單」按鈕新增。</div></div>`;
-return `<div class="card" style="margin-top:12px"><b>觀察清單</b>${L.map(w=>{const Q=quote(w.sym),nm=`<b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)}</span>${w.tag?" "+tagChip(w):""}`;if(!Q)return `<div class="row item" data-s="${esc(w.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span class="mu">尚無資料</span></div>`;const ch=(Q.px/Q.prev-1)*100;
-return `<div class="row item" data-s="${esc(w.sym)}" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)"><span>${nm}</span><span style="text-align:right">${fmt(Q.px)} <b style="color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</b></span></div>`}).join("")}<div class="mu" style="margin-top:10px">點選個股查看技術線圖、營收、新聞</div></div>`}
-function watchPage(){const all=DB.watchlist.filter(w=>!held(w.sym)),L=all.filter(w=>WF==="all"||(WF==="none"?!w.tag:w.tag===WF));let s=banner()+listSwitch("watch")+watchForm()+wfRow(all);
-if(!L.length)s+=`<div class="card mu">${all.length?"這個分類沒有個股。":"觀察清單是空的,用上方表單加入個股。"}</div>`;
-L.forEach(w=>{const Q=quote(w.sym),sg=(DB.stocks[w.sym]||{}).sig;
-if(!Q){s+=`<div class="card item" data-s="${esc(w.sym)}"><b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)} 尚無資料,更新後顯示</span>${tagLine(w)}</div>`;return}
+const SORT={hold:["ret",-1],watch:["chg",-1]};
+const HM={name:h=>h.name,sh:h=>h.shares,cost:h=>h.cost,px:h=>(quote(h.sym)||{}).px,chg:h=>{const Q=quote(h.sym);return Q?Q.px/Q.prev-1:null},val:h=>{const Q=quote(h.sym);return Q?Q.px*h.shares:null},pl:h=>{const Q=quote(h.sym);return Q?(Q.px-h.cost)*h.shares:null},ret:h=>{const Q=quote(h.sym);return Q?Q.px/h.cost-1:null}};
+const WM={name:w=>w.name||w.sym,tag:w=>w.tag||"~",px:w=>(quote(w.sym)||{}).px,chg:w=>{const Q=quote(w.sym);return Q?Q.px/Q.prev-1:null}};
+const sortBy=(a,k,d,M)=>[...a].sort((x,y)=>{const p=M[k](x),q=M[k](y);if(p==null)return 1;if(q==null)return -1;return(typeof p==="string"?p.localeCompare(q):p-q)*d});
+const th=(p,k,n,cls="")=>`<th class="${cls}" data-sort="${p}:${k}">${n}${SORT[p][0]===k?(SORT[p][1]>0?" ↑":" ↓"):""}</th>`;
+const revCell=sym=>{const r=(DB.stocks[sym]||{}).rev,k=r&&(r.m&&r.m.length?"m":r.q&&r.q.length?"q":null);if(!k)return'<span class="mu">—</span>';const x=r[k][r[k].length-1];return `<span class="mu">${k==="m"?"月":"季"} ${esc(x.p)}</span> YoY ${pct(x.yoy)} / ${k==="m"?"MoM":"QoQ"} ${pct(x[k==="m"?"mom":"qoq"])}`};
+function watchMini(){const all=DB.watchlist.filter(w=>!held(w.sym)),L=all.slice(0,8);return `<div class="card"><div class="row"><b>觀察清單</b><span class="mu">${all.length} 檔・點選查看</span></div>`+(L.length?`<table class="tbl" style="margin-top:8px"><tr><th class="l">名稱</th><th class="l">標記</th><th>現價</th><th>今日</th></tr>${L.map(w=>{const Q=quote(w.sym),ch=Q?(Q.px/Q.prev-1)*100:null;return `<tr class="item" data-s="${esc(w.sym)}"><td><b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)}</span></td><td class="l">${w.tag?tagChip(w):'<span class="mu">—</span>'}</td><td>${Q?fmt(Q.px):"—"}</td><td style="color:${ch==null?"inherit":cc(ch)}">${ch==null?"—":sgn(ch)+"%"}</td></tr>`}).join("")}</table>`:`<div class="mu" style="margin-top:8px">還沒有觀察個股,到左側「觀察清單」新增。</div>`)+`</div>`}
+function wrow(w){const Q=quote(w.sym),sg=(DB.stocks[w.sym]||{}).sig,n=`<b>${esc(w.name||w.sym)}</b> <span class="mu">${esc(w.sym)}</span>`,tg=w.tag?tagChip(w):'<span class="mu">未標記</span>',nt=`<span class="mu">${esc(w.tag_note||"")}</span>`;
+if(!Q)return `<tr class="item" data-s="${esc(w.sym)}"><td>${n}</td><td class="l">${tg}</td><td class="l">${nt}</td><td colspan="4" class="l mu">尚無資料,按「更新資料」取得</td></tr>`;
 const ch=(Q.px/Q.prev-1)*100,al=allowed(w.sym),ok=sg?["A","B","C","D"].filter(k=>sg[k]&&sg[k].ok):[];
-s+=`<div class="card item" data-s="${esc(w.sym)}"><div class="row"><b>${esc(w.name||w.sym)} <span class="mu">${esc(w.sym)}</span></b><span>${ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" ")}</span></div>${tagLine(w)}<div class="row" style="margin-top:8px"><span class="big" style="font-size:20px">${fmt(Q.px)}</span><b style="color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</b></div>${spark(Q.d,ch)}${revLine(w.sym)}</div>`});
-return s}
+return `<tr class="item" data-s="${esc(w.sym)}"><td>${n}</td><td class="l">${tg}</td><td class="l">${nt}</td><td>${fmt(Q.px)}</td><td style="color:${cc(ch)}">${sgn(ch)}%</td><td class="l">${ok.length?ok.map(k=>`<span class="chip${al.includes(k)?"":" bad"}">${k}</span>`).join(" "):'<span class="mu">—</span>'}</td><td class="l">${revCell(w.sym)}</td></tr>`}
+function watchPage(){const all=DB.watchlist.filter(w=>!held(w.sym)),F=all.filter(w=>WF==="all"||(WF==="none"?!w.tag:w.tag===WF)),L=sortBy(F,SORT.watch[0],SORT.watch[1],WM);
+return banner()+`<details class="dtl"><summary class="btn p">＋ 新增觀察個股</summary>${watchForm()}</details>`+wfRow(all)+`<div class="card tcard">${L.length?`<table class="tbl"><tr>${th("watch","name","名稱","l")}${th("watch","tag","觀察策略","l")}<th class="l">原因 / 備註</th>${th("watch","px","現價")}${th("watch","chg","今日")}<th class="l">進場訊號</th><th class="l">營收(最新)</th></tr>${L.map(wrow).join("")}</table>`:`<div class="mu" style="padding:14px">${all.length?"這個分類沒有個股。":"觀察清單是空的,按上方「新增觀察個股」加入。"}</div>`}</div>`}
 const lines=(h,e)=>{if(!h)return[];const L=[{y:h.cost,c:"#3b82f6",t:"成本"},{y:h.stop,c:"var(--st)",t:"停損"},{y:h.tp,c:"var(--tpc)",t:"停利"}],dy=e&&e.dyn;if(dy&&dy.stop)L.push({y:dy.stop.price,c:"var(--st)",t:"動態停損"});if(dy&&dy.tp)L.push({y:dy.tp.price,c:"var(--tpc)",t:"動態停利"});return L};
 const dynBlock=dy=>{const li=(k,t)=>dy.custom[k].length?`<div style="margin-top:8px"><b>${t}</b></div><ul style="list-style:none;padding:0">${dy.custom[k].map(x=>`<li>${!x.active?'<span class="mu">未啟用</span>':x.hit?'<b style="color:var(--st)">已觸發</b>':'<span class="mu">未觸發</span>'} ${esc(x.label)}${x.level!=null?` <span class="mu">(${fmt(x.level)})</span>`:""}</li>`).join("")}</ul>`:"";
 return `<div style="margin-top:12px"><b>自訂動態停損停利</b><div class="mu">停利條件在獲利達 ${dy.thr}% 後啟用,目前${dy.kite?"已啟用":"尚未啟用"}。</div><div class="kv"><div><span class="mu">動態停損價</span><b style="color:var(--st)">${dy.stop?fmt(dy.stop.price):"—"}</b></div><div><span class="mu">動態停利價</span><b style="color:var(--tpc)">${dy.tp?fmt(dy.tp.price):"—"}</b></div><div><span class="mu">獲利門檻</span><b>${dy.thr}%</b></div></div>${dy.stop?`<div class="mu" style="margin-top:6px">動態停損價取自:${esc(dy.stop.by)}</div>`:""}${dy.tp?`<div class="mu">動態停利價取自:${esc(dy.tp.by)}</div>`:""}${li("stop","停損條件")}${li("tp","停利條件")}</div>`};
@@ -196,44 +236,59 @@ if(sg){s+=`<div style="margin-top:12px"><b>進場條件</b></div>`+["A","B","C",
 s+=`<div class="mu" style="margin-top:8px">單日成值 ${sg.turn} 億、近 15 日均 ${sg.avg15} 億(原幣)${sg.near5?"・收盤貼近 5 日線":""}</div>`;
 if(sg.rev)s+=`<div style="margin-top:8px"><span class="mu">營收盾牌</span> <b>${LV[sg.rev.level]}</b>${sg.rev.yoy!=null?` <span class="mu">YoY ${fmt(sg.rev.yoy,1)}%</span>`:""}</div>`}
 return s+`</div>`}
-function home(){let s=banner();
-["TW","US"].forEach(m=>{s+=`<div class="sec">${m==="TW"?"台股大盤":"美股大盤"}</div>${rgLine(m)}<div class="grid">`+Object.entries(DB.indices).filter(([,x])=>x.m===m).map(([sym,x])=>{const Q=quote(sym);if(!Q)return"";const ch=(Q.px/Q.prev-1)*100,k=Q.d.at(-1);return `<div class="card item" data-s="${esc(sym)}" style="margin:0"><div class="mu">${esc(x.name)} ${GOV[m]===sym&&x.regime?rgChip(x.regime):""}</div><div class="big">${fmt(Q.px)}</div><div style="color:${cc(ch)};font-weight:600">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</div><div class="mu">高 ${fmt(k.h,0)}・低 ${fmt(k.l,0)}</div>${spark(Q.d,ch)}</div>`}).join("")+`</div>`});
-s+=`<div class="sec">持股損益</div><div class="grid">`+["TW","US"].map(m=>{let c=0,v=0;DB.holdings.forEach(h=>{const Q=quote(h.sym);if(mkt(h.sym)===m&&Q){c+=h.cost*h.shares;v+=Q.px*h.shares}});const pl=v-c;return `<div class="card" style="margin:0"><div class="mu">${m==="TW"?"台股":"美股"}市值</div><div class="big">${cur(m)}${fmt(v,0)}</div><div style="color:${cc(pl)};font-weight:600">${c?`${sgn(pl)} (${sgn(pl/c*100)}%)`:"尚無持股"}</div></div>`}).join("")+`</div>`;
-s+=`<div class="grid" style="margin-top:12px"><button class="btn p" id="gohold">管理持股</button><button class="btn p" id="gowatch">觀察清單 (${DB.watchlist.filter(w=>!held(w.sym)).length})</button></div>`+watchMini();
-const hit=DB.holdings.map(h=>({h,r:exitReasons(h)})).filter(x=>x.r.length);
-return s+sigCard()+`<div class="card" style="margin-top:14px"><div class="row"><b>持股出場檢查</b><span class="mu">${DB.holdings.length} 檔持股</span></div>`+(hit.length?`<div class="alert"><b>已觸發出場條件</b>${hit.map(({h,r})=>`<div class="item" data-s="${esc(h.sym)}" style="margin-top:6px;cursor:pointer"><b>${esc(h.name)}</b> <span class="mu">${esc(r.join("、"))}</span></div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有觸發出場條件</div>`)+holdRows()+`</div>`+settings()}
-function list(){const L=DB.holdings.filter(h=>mkt(h.sym)===mk);
-let s=banner()+listSwitch("hold")+newHoldForm()+`<div class="seg"><button data-m="TW" class="${mk==="TW"?"on":""}">台股</button><button data-m="US" class="${mk==="US"?"on":""}">美股</button></div>`;
-if(!L.length)s+=`<div class="card mu">這個市場還沒有持股,請編輯 holdings.json。</div>`;
-L.forEach(h=>{const Q=quote(h.sym);if(!Q)return s+=`<div class="card item" data-s="${esc(h.sym)}"><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)} 尚無資料,點開可編輯</span></div>`;
-const pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px);
-s+=`<div class="card item" data-s="${esc(h.sym)}"><div class="row"><b>${esc(h.name)} <span class="mu">${esc(h.sym)}</span></b><span><span class="chip ${k}">${t}</span> <button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></span></div><div class="row" style="margin-top:8px"><span class="mu">${fmt(h.shares,0)} 股・成本 ${fmt(h.cost)}・${h.strategy?"策略 "+h.strategy:"未指定策略"}</span><span class="big" style="font-size:20px">${fmt(Q.px)}</span></div><div class="row"><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(mkt(h.sym))}${sgn(pl)} (${sgn(pc)}%)</b></div>${revLine(h.sym)}</div>`});return s}
-const chartCard=(S,d,L)=>`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,L)}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
+function idxCards(m){return Object.entries(DB.indices).filter(([,x])=>x.m===m).map(([sym,x])=>{const Q=quote(sym);if(!Q)return"";const ch=(Q.px/Q.prev-1)*100,k=Q.d.at(-1);return `<div class="card item" data-s="${esc(sym)}"><div class="mu">${esc(x.name)} ${GOV[m]===sym&&x.regime?rgChip(x.regime):""}</div><div class="big">${fmt(Q.px)}</div><div style="color:${cc(ch)};font-weight:600">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</div><div class="mu">高 ${fmt(k.h,0)}・低 ${fmt(k.l,0)}</div>${spark(Q.d,ch)}</div>`}).join("")}
+const pnlCards=()=>["TW","US"].map(m=>{let c=0,v=0;DB.holdings.forEach(h=>{const Q=quote(h.sym);if(mkt(h.sym)===m&&Q){c+=h.cost*h.shares;v+=Q.px*h.shares}});const pl=v-c;return `<div class="card"><div class="mu">${m==="TW"?"台股":"美股"}持股市值</div><div class="big">${cur(m)}${fmt(v,0)}</div><div style="color:${cc(pl)};font-weight:600">${c?`${sgn(pl)} (${sgn(pl/c*100)}%)`:"尚無持股"}</div></div>`}).join("");
+function hrow(h,full){const Q=quote(h.sym),n=`<b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span>`;
+if(!Q)return `<tr class="item" data-s="${esc(h.sym)}"><td>${n}</td><td colspan="${full?11:3}" class="l mu">尚無資料,點開可編輯</td></tr>`;
+const ch=(Q.px/Q.prev-1)*100,pl=(Q.px-h.cost)*h.shares,pc=(Q.px/h.cost-1)*100,[k,t]=stat(h,Q.px),st=`<span class="chip ${k}">${t}</span>`;
+if(!full)return `<tr class="item" data-s="${esc(h.sym)}"><td>${n}</td><td>${fmt(Q.px)}</td><td style="color:${cc(pc)}">${sgn(pc)}%</td><td class="l">${st}</td></tr>`;
+return `<tr class="item" data-s="${esc(h.sym)}"><td>${n}</td><td>${fmt(h.shares,0)}</td><td>${fmt(h.cost)}</td><td>${fmt(Q.px)}</td><td style="color:${cc(ch)}">${sgn(ch)}%</td><td>${fmt(Q.px*h.shares,0)}</td><td style="color:${cc(pl)}">${sgn(pl)}</td><td style="color:${cc(pc)}">${sgn(pc)}%</td><td class="l">${h.strategy||'<span class="mu">—</span>'}</td><td class="l">${st}</td><td class="l">${revCell(h.sym)}</td><td><button class="btn" data-edit="1" style="padding:2px 12px">編輯</button></td></tr>`}
+function exitCard(){const hit=DB.holdings.map(h=>({h,r:exitReasons(h)})).filter(x=>x.r.length),L=sortBy(DB.holdings,"ret",-1,HM);
+return `<div class="card"><div class="row"><b>持股出場檢查</b><span class="mu">${DB.holdings.length} 檔持股・點選查看</span></div>`+(hit.length?`<div class="alert"><b>已觸發出場條件</b>${hit.map(({h,r})=>`<div class="item" data-s="${esc(h.sym)}" style="margin-top:6px"><b>${esc(h.name)}</b> <span class="mu">${esc(r.join("、"))}</span></div>`).join("")}</div>`:`<div class="mu" style="margin-top:8px">目前沒有觸發出場條件</div>`)+(L.length?`<table class="tbl" style="margin-top:10px"><tr><th class="l">名稱</th><th>現價</th><th>報酬率</th><th class="l">狀態</th></tr>${L.map(h=>hrow(h,false)).join("")}</table>`:"")+`</div>`}
+function home(){return banner()+`<div class="cols2"><section><div class="sec">台股大盤</div>${rgLine("TW")}<div class="grid">${idxCards("TW")}</div></section><section><div class="sec">美股大盤</div>${rgLine("US")}<div class="grid">${idxCards("US")}</div></section></div>
+<div class="cols2"><section><div class="sec">持股損益</div><div class="grid">${pnlCards()}</div>${exitCard()}</section><section><div class="sec">策略與觀察</div>${sigCard()}${watchMini()}</section></div>`}
+function sumCards(L){let c=0,v=0,x=0;L.forEach(h=>{const Q=quote(h.sym);if(!Q)return;c+=h.cost*h.shares;v+=Q.px*h.shares;if(exitReasons(h).length)x++});const pl=v-c;
+return `<div class="grid"><div class="card"><div class="mu">持股檔數</div><div class="big">${L.length}</div></div><div class="card"><div class="mu">${mk==="TW"?"台股":"美股"}市值</div><div class="big">${cur(mk)}${fmt(v,0)}</div></div><div class="card"><div class="mu">未實現損益</div><div class="big" style="color:${cc(pl)}">${c?sgn(pl):"—"}</div><div style="color:${cc(pl)}">${c?sgn(pl/c*100)+"%":""}</div></div><div class="card"><div class="mu">觸發出場條件</div><div class="big" style="color:${x?"var(--st)":"inherit"}">${x}</div></div></div>`}
+function list(){const L=sortBy(DB.holdings.filter(h=>mkt(h.sym)===mk),SORT.hold[0],SORT.hold[1],HM);
+return banner()+`<div class="seg"><button data-m="TW" class="${mk==="TW"?"on":""}">台股</button><button data-m="US" class="${mk==="US"?"on":""}">美股</button></div>`+sumCards(L)+`<details class="dtl"><summary class="btn p">＋ 新增持股</summary>${newHoldForm()}</details><div class="card tcard">${L.length?`<table class="tbl"><tr>${th("hold","name","名稱","l")}${th("hold","sh","股數")}${th("hold","cost","成本")}${th("hold","px","現價")}${th("hold","chg","今日")}${th("hold","val","市值")}${th("hold","pl","損益")}${th("hold","ret","報酬率")}<th class="l">策略</th><th class="l">狀態</th><th class="l">營收(最新)</th><th></th></tr>${L.map(h=>hrow(h,true)).join("")}</table>`:`<div class="mu" style="padding:14px">這個市場還沒有持股,按上方「新增持股」加入。</div>`}</div>`}
+function settingsPage(){return banner()+`<div class="cols2"><section>${settings()}</section><section><div class="card"><b>關於</b><div class="mu" style="margin-top:8px;line-height:1.9">頁面版本 ${VER}<br>資料更新時間 ${esc(DB.updated)}(台北時間)<br>資料來源:Yahoo Finance、FinMind、Google 新聞(台灣版)、證交所公開資料。<br>更新方式為手動,按右上角「更新資料」。</div></div></section></div>`}
+let CH=null;
+function infoHtml(i){const {S,d}=CH,k=d[i],pv=S[S.length-d.length+i-1],ch=pv?(k.c/pv.c-1)*100:null,dt=new Date(k.t*1000).toISOString().slice(0,10);
+return `<div class="row"><b>${TF==="m"?dt.slice(0,7):dt+(TF==="w"?" 當週":"")}</b><b style="color:${ch==null?"inherit":cc(ch)}">${ch==null?"—":sgn(ch)+"%"}</b></div><div class="mu">開 ${pf(k.o)}・高 ${pf(k.h)}・低 ${pf(k.l)}・收 ${pf(k.c)}${pv?`・較前一根 ${k.c>=pv.c?"+":"−"}${pf(Math.abs(k.c-pv.c))}`:""}・量 ${fmtVol(k.v)}股</div>`}
+const chartCard=(S,d,L)=>{setCW(chartW());CH={S,d};return `<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div><div class="cinfo" id="cinfo">${infoHtml(d.length-1)}</div><div id="chw" style="touch-action:pan-y;cursor:crosshair">${kline(d,L)}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div><div class="mu" style="margin-top:6px">把滑鼠移到 K 線上,可看該根的價格與較前一根的漲跌幅。</div></div>`};
+function bindChart(){const w=$("#chw");if(!w||!CH)return;const n=CH.d.length,pick=e=>{const r=w.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*CW;if(x<0||x>PW)return;const i=Math.max(0,Math.min(n-1,Math.floor(x/(PW/n))));
+document.querySelectorAll("#chw .xh").forEach(l=>{const px=(i+.5)*PW/n;l.setAttribute("x1",px);l.setAttribute("x2",px);l.setAttribute("visibility","visible")});$("#cinfo").innerHTML=infoHtml(i)};w.onpointerdown=pick;w.onpointermove=pick}
 function indCard(Q){const c=Q.d.map(k=>k.c),avg=k=>c.length>=k?c.slice(-k).reduce((a,b)=>a+b,0)/k:null,e12=ema(c,12),e26=ema(c,26),dif=e12.map((v,i)=>v-e26[i]),dea=ema(dif,9),n=c.length-1,osc=dif[n]-dea[n],po=dif[n-1]-dea[n-1],ma=[5,10,20,60].map(k=>[k,avg(k)]).filter(x=>x[1]!=null);
 return `<div class="card"><b>技術指標</b><table><tr><th>均線</th><th>數值</th><th>現價相對</th></tr>${ma.map(([k,v])=>`<tr><td>MA${k}</td><td>${fmt(v)}</td><td>${pct((Q.px/v-1)*100)}</td></tr>`).join("")}</table><div class="kv"><div><span class="mu">DIF</span><b>${fmt(dif[n])}</b></div><div><span class="mu">MACD</span><b>${fmt(dea[n])}</b></div><div><span class="mu">MACD 柱</span><b style="color:${cc(osc)}">${fmt(osc)}</b></div></div><div class="mu" style="margin-top:6px">MACD 柱${osc>po?"大於":"小於"}前一交易日(${fmt(po)})</div></div>`}
-function indexDetail(sym){const x=DB.indices[sym],Q=quote(sym);if(!Q)return `<div class="card" style="margin-top:12px">${esc(x.name)} 尚無資料</div>`;
+function indexDetail(sym){const x=DB.indices[sym],Q=quote(sym);if(!Q)return `<div class="card">${esc(x.name)} 尚無資料</div>`;
 const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,g=GOV[x.m]===sym;
-return `<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(x.name)} <span class="mu">${esc(sym)}</span></b>${g&&x.regime?rgChip(x.regime):""}</div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div><div class="mu">資料日期 ${esc(x.asof||"")}</div></div>`+(g?rgLine(x.m):"")+chartCard(S,d,[])+indCard(Q)}
-function detail(sym){if(DB.indices[sym])return indexDetail(sym);const h=held(sym),Q=quote(sym),back="";
-if(!Q)return back+`<div class="card" style="margin-top:12px">${esc(nameOf(sym))} 目前還沒有這檔的行情資料。填好下方資料並儲存後會觸發更新,約 1 到 2 分鐘後出現線圖。</div>`+tagCard(sym)+editor(sym,h);
-const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,m=mkt(sym);
-let s=back+`<div class="card" style="margin-top:12px"><div class="row"><b style="font-size:18px">${esc(nameOf(sym))} <span class="mu">${esc(sym)}</span></b><span>${(h||(DB.watchlist.find(x=>x.sym===sym)||{})).tag?`<span class="chip">${esc((h||DB.watchlist.find(x=>x.sym===sym)).tag)}</span> `:""}${h?`<span class="chip ${stat(h,Q.px)[0]}">${stat(h,Q.px)[1]}</span>`:`<span class="chip">觀察中</span>`} <button class="btn" id="goedit" style="padding:2px 12px">${h?"編輯":"加入持股"}</button></span></div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div>`;
-if(h){const pl=(Q.px-h.cost)*h.shares;s+=`<div class="kv"><div><span class="mu">持股成本</span><b>${fmt(h.cost)}</b></div><div><span class="mu">持有股數</span><b>${fmt(h.shares,0)}</b></div><div><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(m)}${sgn(pl)}</b></div></div><div class="kv"><div><span class="mu">目前市值</span><b>${fmt(Q.px*h.shares,0)}</b></div><div><span class="mu">報酬率</span><b style="color:${cc(pl)}">${sgn((Q.px/h.cost-1)*100)}%</b></div><div><span class="mu">距停損</span><b>${!h.stop?"未設定":Q.px>h.stop?fmt((Q.px/h.stop-1)*100)+"%":"已跌破"}</b></div></div>`}
-s+=`</div>`+stratCard(sym,h);
+const head=`<div class="card"><div class="row"><b style="font-size:20px">${esc(x.name)} <span class="mu">${esc(sym)}</span></b>${g&&x.regime?rgChip(x.regime):""}</div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div><div class="mu">資料日期 ${esc(x.asof||"")}</div></div>`;
+return `<div class="dgrid"><div class="dl">${head}${chartCard(S,d,[])}</div><div class="dr">${g?rgLine(x.m):""}${indCard(Q)}</div></div>`}
+function detail(sym){if(DB.indices[sym])return indexDetail(sym);const h=held(sym),Q=quote(sym);
+if(!Q)return `<div class="dgrid"><div class="dl"><div class="card">${esc(nameOf(sym))} 目前還沒有這檔的行情資料。填好右側資料並儲存後,按右上角「更新資料」取得線圖。</div></div><div class="dr">${tagCard(sym)}${editor(sym,h)}</div></div>`;
+const S=Q[TF]||Q.d,d=S.slice(-N[TF]),ch=(Q.px/Q.prev-1)*100,m=mkt(sym),w0=DB.watchlist.find(x=>x.sym===sym),tg=(h||w0||{}).tag;
+let head=`<div class="card"><div class="row"><b style="font-size:20px">${esc(nameOf(sym))} <span class="mu">${esc(sym)}</span></b><span>${tg?`<span class="chip">${esc(tg)}</span> `:""}${h?`<span class="chip ${stat(h,Q.px)[0]}">${stat(h,Q.px)[1]}</span>`:`<span class="chip">觀察中</span>`} <button class="btn" id="goedit" style="padding:3px 14px">${h?"編輯":"加入持股"}</button></span></div><div class="big" style="margin-top:6px">${fmt(Q.px)} <span style="font-size:15px;color:${cc(ch)}">${ch>=0?"▲":"▼"} ${fmt(Math.abs(ch))}%</span></div>`;
+if(h){const pl=(Q.px-h.cost)*h.shares;head+=`<div class="kv"><div><span class="mu">持股成本</span><b>${fmt(h.cost)}</b></div><div><span class="mu">持有股數</span><b>${fmt(h.shares,0)}</b></div><div><span class="mu">目前市值</span><b>${fmt(Q.px*h.shares,0)}</b></div><div><span class="mu">未實現損益</span><b style="color:${cc(pl)}">${cur(m)}${sgn(pl)}</b></div><div><span class="mu">報酬率</span><b style="color:${cc(pl)}">${sgn((Q.px/h.cost-1)*100)}%</b></div><div><span class="mu">距停損</span><b>${!h.stop?"未設定":Q.px>h.stop?fmt((Q.px/h.stop-1)*100)+"%":"已跌破"}</b></div></div>`}
+head+=`</div>`;
+let R=stratCard(sym,h);
 if(h){const rg=h.tp-h.stop,pos=Math.max(0,Math.min(100,(Q.px-h.stop)/rg*100)),cp=Math.max(0,Math.min(100,(h.cost-h.stop)/rg*100));
-s+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)||"尚未填寫"}</p></div><div class="card"><b>停損與停利</b><div class="kv"><div><span class="mu">預計停損</span><b style="color:var(--st)">${fmt(h.stop)}</b></div><div><span class="mu">預計停利</span><b style="color:var(--tpc)">${fmt(h.tp)}</b></div><div><span class="mu">現價位置</span><b>${fmt(pos,0)}%</b></div></div><div class="bar"><i style="left:calc(${cp}% - 2px);opacity:.35"></i><i style="left:calc(${pos}% - 2px)"></i></div><div class="row mu"><span>停損</span><span>淡色為成本</span><span>停利</span></div><p class="mu" style="margin:10px 0 0">出場規則:${esc(h.rule)||"尚未填寫"}</p></div>`}
-s+=`<div class="card"><b>技術線圖</b> <span class="mu">${TFN[TF]}・近 ${d.length} ${TFU[TF]}・黃線 MA20</span><div class="seg" style="margin:8px 0">${["d","w","m"].map(k=>`<button data-tf="${k}" class="${TF===k?"on":""}">${TFN[k]}</button>`).join("")}</div>${kline(d,lines(h,h?ex(h):null))}<div class="mu" style="margin-top:6px">成交量</div>${vol(d)}<div class="mu" style="margin-top:6px">MACD(12, 26, 9)・藍線 DIF・黃線 DEA</div>${macd(S,d.length)}</div>`;
-return s+revCard(sym)+newsCard(sym,Q)+tagCard(sym)+editor(sym,h)}
-function render(){$("#ttl").textContent=sel?(DB.indices[sel]?"指數":"個股"):{home:"總覽",hold:"持股",watch:"觀察清單"}[tab];
-const hb=$("#hb");if(hb){hb.hidden=!(sel||tab!=="home");hb.textContent=sel?"← 返回"+{home:"總覽",hold:"持股",watch:"觀察清單"}[tab]:"← 返回總覽"}
-document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
-$("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():tab==="watch"?watchPage():list());
+R+=`<div class="card"><b>買進原因</b><p style="margin:8px 0 0">${esc(h.why)||"尚未填寫"}</p></div><div class="card"><b>停損與停利</b><div class="kv"><div><span class="mu">預計停損</span><b style="color:var(--st)">${fmt(h.stop)}</b></div><div><span class="mu">預計停利</span><b style="color:var(--tpc)">${fmt(h.tp)}</b></div><div><span class="mu">現價位置</span><b>${fmt(pos,0)}%</b></div></div><div class="bar"><i style="left:calc(${cp}% - 2px);opacity:.35"></i><i style="left:calc(${pos}% - 2px)"></i></div><div class="row mu"><span>停損</span><span>淡色為成本</span><span>停利</span></div><p class="mu" style="margin:10px 0 0">出場規則:${esc(h.rule)||"尚未填寫"}</p></div>`}
+R+=tagCard(sym)+editor(sym,h);
+return `<div class="dgrid"><div class="dl">${head}${chartCard(S,d,lines(h,h?ex(h):null))}${revCard(sym)}${newsCard(sym,Q)}</div><div class="dr">${R}</div></div>`}
+const TITLES={home:"總覽",hold:"持股",watch:"觀察清單",set:"設定"};
+function render(){$("#ttl").textContent=sel?(DB.indices[sel]?"指數":"個股"):TITLES[tab];
+const hb=$("#hb");if(hb){hb.hidden=!(sel||tab!=="home");hb.textContent=sel?"← 返回"+TITLES[tab]:"← 返回總覽"}
+document.querySelectorAll("#side [data-t]").forEach(b=>b.classList.toggle("on",b.dataset.t===tab&&!sel));
+const ui=$("#updinfo");if(ui&&DB)ui.textContent="資料更新時間 "+DB.updated+"(台北)"+(DB.sample?"・範例資料":"");
+const vi=$("#verinfo");if(vi)vi.textContent="版本 "+VER;
+const ub=$("#upd");if(ub){ub.textContent=UPD||"更新資料";ub.disabled=!!UPD}
+$("#app").innerHTML=msgHtml()+(sel?detail(sel):tab==="home"?home():tab==="watch"?watchPage():tab==="set"?settingsPage():list());
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mk=b.dataset.m;render()});
 document.querySelectorAll(".item").forEach(b=>b.onclick=()=>open(b.dataset.s));
+document.querySelectorAll("[data-sort]").forEach(h=>h.onclick=()=>{const[p,k]=h.dataset.sort.split(":");SORT[p]=SORT[p][0]===k?[k,-SORT[p][1]]:[k,k==="name"||k==="tag"?1:-1];render()});
 const on=(i,f)=>{const e=$(i);if(e)e.onclick=f};
-on("#bk",goBack);on("#svt",saveTag);on("#upd",refreshData);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH);
-on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#gohold",()=>{try{history.pushState({t:1},"")}catch(e){}tab="hold";sel=null;render();scrollTo(0,0)});on("#gowatch",()=>{try{history.pushState({t:1},"")}catch(e){}tab="watch";sel=null;render();scrollTo(0,0)});
-document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{tab=b.dataset.nav;sel=null;render();scrollTo(0,0)});on("#nh",newHolding);
+on("#bk",goBack);bindChart();on("#svt",saveTag);on("#upd",refreshData);on("#hb",goBack);on("#sv",saveHolding);on("#rm",removeHolding);on("#rmw",removeWatch);on("#aw",addWatch);on("#gs",saveGH);on("#gt",testGH);on("#gc",clearGH);
+on("#goedit",()=>{const e=$("#edcard");if(e)e.scrollIntoView({behavior:"smooth"})});on("#nh",newHolding);
 document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{GOEDIT=true});
 document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{TF=b.dataset.tf;render()});
 document.querySelectorAll("[data-wf]").forEach(b=>b.onclick=()=>{WF=b.dataset.wf;render()});
@@ -242,10 +297,11 @@ if(GOEDIT&&sel){GOEDIT=false;const e=$("#edcard");if(e)e.scrollIntoView()}}
 function open(s){sel=s;$("#rs").innerHTML="";$("#q").value="";try{history.pushState({d:1},"")}catch(e){}render();scrollTo(0,0)}
 /* 搜尋範圍:持股 + watchlist */
 function hits(v){v=v.trim().toLowerCase();if(!v)return[];const u=[...DB.holdings,...DB.watchlist.filter(w=>!held(w.sym))];return u.filter(x=>x.sym.toLowerCase().includes(v)||(x.name||"").toLowerCase().includes(v)).slice(0,8)}
-$("#q").oninput=e=>{const r=hits(e.target.value),v=e.target.value.trim();$("#rs").innerHTML=!v?"":r.length?r.map(x=>`<div data-s="${esc(x.sym)}"><b>${esc(x.sym)}</b> ${esc(x.name||"")} ${held(x.sym)?'<span class="chip">持股</span>':""}</div>`).join(""):`<div class="mu">不在追蹤清單。請把代號加進 holdings.json 的 watchlist,下次排程更新後即可搜尋。</div>`;
+$("#q").oninput=e=>{const r=hits(e.target.value),v=e.target.value.trim();$("#rs").innerHTML=!v?"":r.length?r.map(x=>`<div data-s="${esc(x.sym)}"><b>${esc(x.sym)}</b> ${esc(x.name||"")} ${held(x.sym)?'<span class="chip">持股</span>':""}</div>`).join(""):`<div class="mu">不在追蹤清單。到「觀察清單」新增後,按「更新資料」即可搜尋。</div>`;
 document.querySelectorAll("#rs [data-s]").forEach(b=>b.onclick=()=>open(b.dataset.s))};
 $("#q").onkeydown=e=>{if(e.key==="Enter"){const r=hits(e.target.value);if(r[0])open(r[0].sym)}};
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t!=="home"&&tab==="home"){try{history.pushState({t:1},"")}catch(e){}}tab=t;sel=null;render();scrollTo(0,0)});
+document.querySelectorAll("#side [data-t]").forEach(b=>b.onclick=()=>{const t=b.dataset.t;if(t!=="home"&&tab==="home"){try{history.pushState({t:1},"")}catch(e){}}tab=t;sel=null;render();scrollTo(0,0)});
+let rz;try{window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(DB&&sel&&document.querySelector("#chw"))render()},250)})}catch(e){}
 /* 載入:data.json 放行情;持股設定優先從 GitHub 讀最新版(有設定權杖時),否則讀 holdings.json */
 (async()=>{try{const [d,hj]=await Promise.all([fetch("data/data.json?"+Date.now()).then(r=>{if(!r.ok)throw 0;return r.json()}),
 (gh().t?readCfg().then(x=>x.cfg).catch(()=>null):Promise.resolve(null)).then(c=>c||fetch("holdings.json?"+Date.now()).then(r=>r.ok?r.json():null).catch(()=>null))]);
