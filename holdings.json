@@ -179,6 +179,25 @@
           "w_close_down"
         ]
       }
+    },
+    {
+      "sym": "PLTR",
+      "name": "Palantir",
+      "shares": 3,
+      "cost": 171.73,
+      "stop": 150,
+      "tp": 200,
+      "why": "軟體股噴發，PLTR還沒動",
+      "rule": "",
+      "entry_date": "2026-11-12",
+      "rules": {
+        "stop": [
+          "m_osc_down"
+        ],
+        "tp": [
+          "w_close_down"
+        ]
+      }
     }
   ],
   "watchlist": [
