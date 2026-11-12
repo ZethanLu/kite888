@@ -296,8 +296,25 @@ def main():
             stocks[sym] = old["stocks"][sym]
     if ok == 0:
         sys.exit("全部抓取失敗,保留舊資料")
-    data = {"updated": now.strftime("%Y-%m-%d %H:%M"), "updated_date": now.strftime("%Y-%m-%d"),
-            "sample": a.sample, "holdings": H, "watchlist": W, "indices": indices, "stocks": stocks}
+   fx_usdtwd = 32.2
+    if not a.sample:
+        try:
+            import yfinance as yf
+            fx_hist = yf.Ticker("USDTWD=X").history(period="5d")
+            if not fx_hist.empty:
+                fx_usdtwd = round(float(fx_hist["Close"].dropna().iloc[-1]), 2)
+        except Exception as e:
+            print("匯率抓取失敗，使用預設值:", e, file=sys.stderr)
+
+    data = {
+        "updated": now.strftime("%Y-%m-%d %H:%M"),
+        "updated_date": now.strftime("%Y-%m-%d"),
+        "fx_usdtwd": fx_usdtwd,  # <--- 新增這行匯率欄位
+        "sample": a.sample,
+        "holdings": H,
+        "watchlist": W,
+        "indices": indices,
+        "stocks": stocks}
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"完成:{ok} 檔成功,更新時間 {data['updated']}")
