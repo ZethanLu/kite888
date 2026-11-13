@@ -236,6 +236,25 @@
           "w_close_down"
         ]
       }
+    },
+    {
+      "sym": "3491.TWO",
+      "name": "昇達科",
+      "shares": 14,
+      "cost": 1431.21,
+      "stop": 1380,
+      "tp": 1760,
+      "why": "衛星\nSPACEX 太空計畫",
+      "rule": "",
+      "entry_date": "2026-11-13",
+      "rules": {
+        "stop": [
+          "loss5"
+        ],
+        "tp": [
+          "below_ma5"
+        ]
+      }
     }
   ],
   "watchlist": [
