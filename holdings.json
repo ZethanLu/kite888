@@ -255,6 +255,17 @@
           "below_ma5"
         ]
       }
+    },
+    {
+      "sym": "TSLA",
+      "name": "TESLA",
+      "shares": 3,
+      "cost": 363,
+      "stop": 250,
+      "tp": 600,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-10-23"
     }
   ],
   "watchlist": [
