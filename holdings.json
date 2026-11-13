@@ -179,6 +179,25 @@
           "fall_back"
         ]
       }
+    },
+    {
+      "sym": "2330.TW",
+      "name": "華通",
+      "shares": 100,
+      "cost": 205.5,
+      "stop": 190,
+      "tp": 266,
+      "why": "大跌後反彈指標(衛星)\nSPACEX太空計畫",
+      "rule": "",
+      "entry_date": "2026-11-13",
+      "rules": {
+        "stop": [
+          "below_entry_low"
+        ],
+        "tp": [
+          "fall_back"
+        ]
+      }
     }
   ],
   "watchlist": [
