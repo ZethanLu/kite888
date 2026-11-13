@@ -198,6 +198,25 @@
           "fall_back"
         ]
       }
+    },
+    {
+      "sym": "6805.TW",
+      "name": "富世達",
+      "shares": 16,
+      "cost": 2001.69,
+      "stop": 1670,
+      "tp": 2500,
+      "why": "大跌後回穩相關(衛星\nSPACEX太空計畫 冷卻系統",
+      "rule": "",
+      "entry_date": "2026-11-13",
+      "rules": {
+        "stop": [
+          "below_ma60"
+        ],
+        "tp": [
+          "w_close_down"
+        ]
+      }
     }
   ],
   "watchlist": [
