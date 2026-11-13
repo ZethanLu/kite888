@@ -217,6 +217,25 @@
           "w_close_down"
         ]
       }
+    },
+    {
+      "sym": "8039.TW",
+      "name": "台虹",
+      "shares": 100,
+      "cost": 216.68,
+      "stop": 182,
+      "tp": 315,
+      "why": "衛星\nSPACEX 太空計畫衛星版的鐵弗龍中介層\n不宜太多(樂透選擇",
+      "rule": "",
+      "entry_date": "2026-11-13",
+      "rules": {
+        "stop": [
+          "below_ma60"
+        ],
+        "tp": [
+          "w_close_down"
+        ]
+      }
     }
   ],
   "watchlist": [
