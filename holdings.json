@@ -247,6 +247,17 @@
       "why": "",
       "rule": "",
       "entry_date": "2026-10-23"
+    },
+    {
+      "sym": "2313.TW",
+      "name": "華通",
+      "shares": 100,
+      "cost": 205.5,
+      "stop": 190,
+      "tp": 266,
+      "why": "衛星版\nSPACEX太空計畫",
+      "rule": "",
+      "entry_date": "2026-11-13"
     }
   ],
   "watchlist": [
