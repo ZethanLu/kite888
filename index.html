@@ -346,6 +346,8 @@ button, input, select, textarea { font: inherit; color: var(--tx); }
 .btn.p { background: var(--ac); color: #fff; border-color: var(--ac); }
 .btn.p:hover { background: var(--ac-hover); color: #fff; }
 .btn.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 6px; }
+.btn.danger { color: var(--r); border-color: color-mix(in srgb, var(--r) 40%, var(--bd)); }
+.btn.danger:hover { background: color-mix(in srgb, var(--r) 12%, transparent); border-color: var(--r); }
 .btn:disabled { opacity: 0.6; cursor: wait; }
 
 input, select, textarea {
@@ -393,7 +395,7 @@ input[type=checkbox] { width: auto; margin-right: 6px; accent-color: var(--ac); 
 .alloc-legend span { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .alloc-legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 
-/* 表格優化 (已修正標題遮擋問題) */
+/* 表格優化 */
 ul { margin: 6px 0 0; padding-left: 18px; }
 li { margin: 5px 0; }
 a { color: var(--ac); text-decoration: none; }
@@ -462,7 +464,7 @@ th[data-sort]:hover { color: var(--tx); }
 }
 #drawer-mask.open { display: flex; }
 #drawer {
-  width: min(680px, 92vw);
+  width: min(700px, 94vw);
   height: 100vh;
   background: var(--card);
   border-left: 1px solid var(--bd);
@@ -530,6 +532,11 @@ const fmt = (n, d = 2) => Number(n).toLocaleString("en-US", { minimumFractionDig
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ema = (a, n) => { const k = 2 / (n + 1); let e = a[0]; return a.map(v => e = v * k + e * (1 - k)); };
 const ma = (a, n) => a.map((_, i) => i < n - 1 ? null : a.slice(i - n + 1, i + 1).reduce((x, y) => x + y, 0) / n);
+const normSym = s => {
+  s = String(s || "").trim().toUpperCase();
+  if (/^\d{4,6}[A-Z]?$/.test(s)) s += ".TW";
+  return s;
+};
 const mkt = s => /\.TWO?$|^\^TW/.test(s) ? "TW" : "US";
 const cur = m => m === "TW" ? "NT$" : "US$";
 const cc = v => v >= 0 ? "var(--r)" : "var(--g)";
@@ -537,7 +544,7 @@ const sgn = (v, d = 2) => (v >= 0 ? "+" : "−") + fmt(Math.abs(v), d);
 const UP = "var(--r)", DN = "var(--g)";
 const N = { d: 135, w: 104, m: 60 }, TFN = { d: "日 K", w: "週 K", m: "月 K" }, TFU = { d: "日", w: "週", m: "個月" };
 let TF = "d", RV = null, DTAB = "strat", QFILTER = "";
-const VER = "v16.1・桌面寬螢幕旗艦版";
+const VER = "v16.2・桌面寬螢幕旗艦版";
 let UPD = "", WF = "all";
 const TAGS = ["打工型", "上班型", "老闆型", "市值排列", "其他"];
 
@@ -729,25 +736,30 @@ function closeDrawer() {
 }
 $("#drawer-mask").onclick = e => { if (e.target.id === "drawer-mask") closeDrawer(); };
 
-/* 編輯器與表單 */
-function editor(sym, h, inDrawer = false) {
-  const inW = DB.watchlist.some(w => w.sym === sym);
+/* 編輯器與表單 (支援直接修改代號與透過 Index 精準刪除) */
+function editor(sym, h, inDrawer = false, hIdx = -1) {
+  if (h && hIdx < 0) hIdx = DB.holdings.indexOf(h);
+  const actualSym = h ? (h.sym || "") : (sym || "");
+  const actualName = h ? (h.name || nameOf(actualSym)) : nameOf(actualSym);
+  const inW = actualSym && DB.watchlist.some(w => w.sym === actualSym);
   const v = k => h && h[k] != null ? esc(h[k]) : "";
-  return `<div class="${inDrawer ? "" : "card"}" id="edcard">
+
+  return `<div class="${inDrawer ? "" : "card"}" id="edcard" data-hidx="${hIdx}" data-orig-sym="${esc(actualSym)}">
     <div class="row">
-      <b style="font-size:16px">${h ? `編輯持股：${esc(nameOf(sym))} (${esc(sym)})` : `加入持股：${esc(sym || "")}`}</b>
+      <b style="font-size:16px">${h ? `編輯持股：${esc(actualName || "未命名")} ${actualSym ? "(" + esc(actualSym) + ")" : "(代號未填)"}` : `加入持股：${esc(actualSym)}`}</b>
       ${inDrawer ? `<button class="btn sm" id="dr-close">✕ 關閉</button>` : ""}
     </div>
     <div class="ed">
-      <div><label>股票名稱</label><input id="e_n" value="${esc(nameOf(sym))}"></div>
+      <div><label>股票代號 (台股填4碼如 2313)</label><input id="e_sym" placeholder="例如 2313.TW 或 NVDA" value="${esc(actualSym)}"></div>
+      <div><label>股票名稱</label><input id="e_n" placeholder="例如 華通" value="${esc(actualName)}"></div>
       <div><label>持有股數</label><input id="e_sh" type="number" step="any" value="${v("shares")}"></div>
       <div><label>平均成本價</label><input id="e_cost" type="number" step="any" value="${v("cost")}"></div>
       <div><label>預計硬停損價</label><input id="e_stop" type="number" step="any" value="${v("stop")}"></div>
       <div><label>預計目標停利價</label><input id="e_tp" type="number" step="any" value="${v("tp")}"></div>
       <div><label>停利啟用門檻 %</label><input id="e_ta" type="number" step="any" placeholder="預設 10" value="${v("tp_after")}"></div>
-      <div style="grid-column:span 2"><label>套用風箏策略</label>
+      <div><label>套用風箏策略</label>
         <select id="e_st">
-          <option value="">未指定 (僅使用自訂/硬停損)</option>
+          <option value="">未指定 (僅自訂/硬停損)</option>
           ${["A", "B", "C", "D"].map(k => `<option value="${k}"${h && h.strategy === k ? " selected" : ""}>${k}・${ST[k]}</option>`).join("")}
         </select>
       </div>
@@ -768,12 +780,12 @@ function editor(sym, h, inDrawer = false) {
       </div>
     </div>
     <div class="row" style="margin-top:16px">
-      <button class="btn p" id="sv" data-sym="${esc(sym)}">儲存到 GitHub</button>
+      <button class="btn p" id="sv">儲存到 GitHub</button>
       <div>
-        ${h ? `<button class="btn" id="rm" data-sym="${esc(sym)}" style="color:var(--r)">移除持股</button>` : inW ? `<button class="btn" id="rmw" data-sym="${esc(sym)}">移除觀察</button>` : ""}
+        ${h ? `<button class="btn danger" id="rm">🗑 移除這筆持股</button>` : inW ? `<button class="btn danger" id="rmw">移除觀察</button>` : ""}
       </div>
     </div>
-    <div class="mu" style="margin-top:10px">儲存會直接更新 Repo 內的 holdings.json。策略 D 的時間停損、進場日低點，以及放風箏階段的最高損益，都需要填寫進場日期才算得準。</div>
+    <div class="mu" style="margin-top:10px">💡 提示：若誤將台股建為美股或漏填代號，可直接修改上方「股票代號」（例如輸入 <b>2313</b> 會自動轉為 <b>2313.TW</b> 並歸入台股），儲存後按右上角「更新資料」即可抓到股價！</div>
   </div>`;
 }
 
@@ -782,10 +794,10 @@ function quickAddDrawerHtml() {
     <div class="row"><b style="font-size:17px">快速新增持股或觀察個股</b><button class="btn sm" id="dr-close">✕ 關閉</button></div>
     <div class="card" style="margin-top:14px">
       <b>1. 新增持股部位</b>
-      <div class="mu" style="margin:4px 0 10px">台股 4~6 碼數字預設為上市(.TW)，上櫃請輸入 .TWO (例如 3675.TWO)，美股直接輸入代號。</div>
+      <div class="mu" style="margin:4px 0 10px">台股 4~6 碼數字預設為上市(.TW)，上櫃請輸入 .TWO (例如 3675.TWO)，美股直接輸入英文代號。</div>
       <div class="ed cols-2">
-        <div><label>股票代號</label><input id="nh_s" placeholder="例如 2308 或 NVDA"></div>
-        <div><label>股票名稱 (選填)</label><input id="nh_n" placeholder="例如 台達電"></div>
+        <div><label>股票代號 (必填)</label><input id="nh_s" placeholder="例如 2313 或 NVDA"></div>
+        <div><label>股票名稱 (選填)</label><input id="nh_n" placeholder="例如 華通"></div>
       </div>
       <button class="btn p" id="nh" style="margin-top:12px">下一步：填寫部位與策略 →</button>
     </div>
@@ -793,7 +805,7 @@ function quickAddDrawerHtml() {
       <b>2. 加入策略觀察清單</b>
       <div class="mu" style="margin:4px 0 10px">列入觀察清單後，系統每日會自動掃描 A~D 四大風箏進場訊號。</div>
       <div class="ed cols-2">
-        <div><label>股票代號</label><input id="w_s" placeholder="例如 2454 或 AMD"></div>
+        <div><label>股票代號 (必填)</label><input id="w_s" placeholder="例如 2454 或 AMD"></div>
         <div><label>股票名稱 (選填)</label><input id="w_n" placeholder="例如 聯發科"></div>
         ${tagFields("w")}
       </div>
@@ -807,29 +819,54 @@ function bindDrawerEvents() {
   on("#dr-close", closeDrawer);
   on("#nh", newHolding);
   on("#aw", addWatch);
-  on("#sv", () => saveHolding($("#sv").dataset.sym));
-  on("#rm", () => removeHolding($("#rm").dataset.sym));
-  on("#rmw", () => removeWatch($("#rmw").dataset.sym));
+  on("#sv", saveHolding);
+  on("#rm", removeHolding);
+  on("#rmw", removeWatch);
 }
 
 function newHolding() {
-  let s = $("#nh_s").value.trim().toUpperCase();
+  let s = normSym($("#nh_s").value);
   const n = $("#nh_n").value.trim();
-  if (!s) return;
-  if (/^\d{4,6}[A-Z]?$/.test(s)) s += ".TW";
+  if (!s) { alert("請輸入股票代號（例如台股 2313 或美股 NVDA）！"); return; }
+  if (/[\u4e00-\u9fa5]/.test(s)) { alert("「股票代號」欄請輸入數字或英文代號（例如 2313），中文名稱請填在右邊的「股票名稱」欄喔！"); return; }
   if (n) TMP[s] = n;
-  openDrawer(editor(s, held(s), true));
+  const existIdx = DB.holdings.findIndex(h => h.sym === s);
+  openDrawer(editor(s, existIdx >= 0 ? DB.holdings[existIdx] : null, true, existIdx));
 }
 
-function saveHolding(targetSym) {
-  const sym = targetSym || sel;
-  const g = i => $("#e_" + i).value.trim(), n = i => parseFloat(g(i));
-  const prev = held(sym) || {}, wl = DB.watchlist.find(x => x.sym === sym) || {};
+function matchHoldingIndex(list, hIdx, origSym, fallbackName) {
+  if (hIdx >= 0 && hIdx < list.length) {
+    if (list[hIdx].sym === origSym || (!list[hIdx].sym && !origSym)) return hIdx;
+  }
+  if (origSym) {
+    const i = list.findIndex(h => h.sym === origSym);
+    if (i >= 0) return i;
+  }
+  return list.findIndex(h => !h.sym && h.name === fallbackName);
+}
+
+function saveHolding() {
+  const card = $("#edcard");
+  if (!card) return;
+  const hIdx = parseInt(card.dataset.hidx ?? "-1", 10);
+  const origSym = card.dataset.origSym ?? "";
+
+  const g = i => ($("#e_" + i) ? $("#e_" + i).value.trim() : "");
+  const n = i => parseFloat(g(i));
+  const newSym = normSym(g("sym") || origSym || sel);
+
+  if (!newSym || /[\u4e00-\u9fa5]/.test(newSym)) {
+    alert("請填寫正確的英文或數字「股票代號」（例如台股華通請填 2313 或 2313.TW）！");
+    return;
+  }
+
+  const prev = (hIdx >= 0 && DB.holdings[hIdx]) ? DB.holdings[hIdx] : (held(origSym || newSym) || {});
+  const wl = DB.watchlist.find(x => x.sym === newSym) || {};
   const o = {
     ...(prev.sym ? {} : { ...(wl.tag ? { tag: wl.tag } : {}), ...(wl.tag_note ? { tag_note: wl.tag_note } : {}) }),
     ...prev,
-    sym,
-    name: g("n") || nameOf(sym),
+    sym: newSym,
+    name: g("n") || prev.name || nameOf(newSym),
     shares: n("sh"),
     cost: n("cost"),
     stop: n("stop"),
@@ -843,38 +880,62 @@ function saveHolding(targetSym) {
   if (!o.strategy) delete o.strategy;
   if (!o.entry_date) delete o.entry_date;
   if (!(o.tp_after > 0)) delete o.tp_after;
+
   const ck = nm => [...document.querySelectorAll(`#edcard input[name=${nm}]:checked`)].map(x => x.value);
   const rl = { stop: ck("rs"), tp: ck("rt") };
   if (rl.stop.length || rl.tp.length) o.rules = rl; else delete o.rules;
+
   if (!(o.shares > 0 && o.cost > 0 && o.stop > 0 && o.tp > o.stop)) {
     alert("請確認股數、成本、停損、停利都有填寫，且停利價需大於停損價。");
     return;
   }
+
+  if (sel && sel === origSym && newSym !== origSym) sel = newSym;
+
   run(() => mutate(cfg => {
-    const i = cfg.holdings.findIndex(h => h.sym === o.sym);
-    i < 0 ? cfg.holdings.push(o) : cfg.holdings[i] = o;
+    const idx = matchHoldingIndex(cfg.holdings, hIdx, origSym, o.name);
+    if (idx >= 0) {
+      cfg.holdings[idx] = o;
+      // 若修改後的代號與其他重複，清除多餘項目
+      cfg.holdings = cfg.holdings.filter((item, i) => i === idx || item.sym !== o.sym);
+    } else {
+      const existIdx = cfg.holdings.findIndex(h => h.sym === o.sym);
+      existIdx < 0 ? cfg.holdings.push(o) : cfg.holdings[existIdx] = o;
+    }
     cfg.watchlist = cfg.watchlist.filter(w => w.sym !== o.sym);
-  }, `holdings: ${o.sym}`), !DB.stocks[o.sym] || prev.strategy !== o.strategy || prev.entry_date !== o.entry_date || prev.cost !== o.cost || prev.tp_after !== o.tp_after || JSON.stringify(prev.rules) !== JSON.stringify(o.rules));
+  }, `holdings: ${o.sym}`), !DB.stocks[o.sym] || origSym !== o.sym || prev.strategy !== o.strategy || prev.entry_date !== o.entry_date || prev.cost !== o.cost || prev.tp_after !== o.tp_after || JSON.stringify(prev.rules) !== JSON.stringify(o.rules));
 }
 
-function removeHolding(targetSym) {
-  const s = targetSym || sel;
-  if (!confirm(`確定移除 ${nameOf(s)} (${s}) 持股？`)) return;
-  if (sel === s) { sel = null; tab = "hold"; }
-  run(() => mutate(cfg => { cfg.holdings = cfg.holdings.filter(h => h.sym !== s); }, `holdings: remove ${s}`), false, "已移除持股。");
+function removeHolding() {
+  const card = $("#edcard");
+  if (!card) return;
+  const hIdx = parseInt(card.dataset.hidx ?? "-1", 10);
+  const origSym = card.dataset.origSym ?? "";
+  const target = (hIdx >= 0 && DB.holdings[hIdx]) ? DB.holdings[hIdx] : held(origSym || sel);
+  const label = target ? `${target.name || "未命名"} (${target.sym || "無代號"})` : (origSym || sel);
+
+  if (!confirm(`確定要移除「${label}」這筆持股嗎？`)) return;
+  if (sel && (sel === origSym || sel === (target && target.sym))) { sel = null; tab = "hold"; }
+
+  run(() => mutate(cfg => {
+    const idx = matchHoldingIndex(cfg.holdings, hIdx, origSym, target ? target.name : "");
+    if (idx >= 0) cfg.holdings.splice(idx, 1);
+    else if (origSym) cfg.holdings = cfg.holdings.filter(h => h.sym !== origSym);
+  }, `holdings: remove ${origSym || label}`), false, `已移除持股：${label}。`);
 }
 
-function removeWatch(targetSym) {
-  const s = targetSym || sel;
+function removeWatch() {
+  const card = $("#edcard");
+  const s = (card && card.dataset.origSym) || sel;
+  if (!s) return;
   if (sel === s) { sel = null; tab = "watch"; }
   run(() => mutate(cfg => { cfg.watchlist = cfg.watchlist.filter(w => w.sym !== s); }, `watchlist: remove ${s}`), false, "已移除觀察個股。");
 }
 
 function addWatch() {
-  let s = $("#w_s").value.trim().toUpperCase();
+  let s = normSym($("#w_s").value);
   const nm = $("#w_n").value.trim(), tg = $("#w_t").value, rs = $("#w_r").value.trim();
-  if (!s) return;
-  if (/^\d{4,6}[A-Z]?$/.test(s)) s += ".TW";
+  if (!s || /[\u4e00-\u9fa5]/.test(s)) { alert("請在代號欄輸入正確的股票代號（例如 2454 或 AMD）！"); return; }
   if (held(s) || DB.watchlist.some(w => w.sym === s)) { alert(s + " 已經在清單裡了。"); return; }
   if (tg === "其他" && !rs) { alert("選「其他」請填寫原因。"); return; }
   run(() => mutate(cfg => cfg.watchlist.push({ sym: s, name: nm || s, ...(tg ? { tag: tg } : {}), ...(rs ? { tag_note: rs } : {}) }), `watchlist: add ${s}`), true);
@@ -915,6 +976,7 @@ async function testGH() {
 
 /* 行情與基礎資料計算 */
 function quote(sym) {
+  if (!sym) return null;
   const o = (DB.indices[sym] || DB.stocks[sym]);
   if (!o || !o.bars || o.bars.length < 2) return null;
   const d = o.bars.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v }));
@@ -930,7 +992,7 @@ function agg(d, k) {
   }
   return g;
 }
-const held = s => DB.holdings.find(h => h.sym === s);
+const held = s => s ? DB.holdings.find(h => h.sym === s) : null;
 const TMP = {};
 const nameOf = s => (held(s) || DB.watchlist.find(w => w.sym === s) || {}).name || TMP[s] || (DB.indices[s] || {}).name || s;
 const stat = (h, p) => {
@@ -1219,7 +1281,7 @@ function saveTag() {
 /* 排序與表格渲染 */
 const SORT = { hold: ["ret", -1], watch: ["chg", -1] };
 const HM = {
-  name: h => h.name,
+  name: h => h.name || "",
   sh: h => h.shares,
   cost: h => h.cost,
   px: h => (quote(h.sym) || {}).px,
@@ -1274,7 +1336,7 @@ function wrow(w) {
   const n = `<b>${esc(w.name || w.sym)}</b> <div class="mu">${esc(w.sym)}</div>`;
   const tg = w.tag ? tagChip(w) : '<span class="mu">未標記</span>';
   const nt = `<span class="mu">${esc(w.tag_note || "")}</span>`;
-  if (!Q) return `<tr class="item" data-s="${esc(w.sym)}"><td>${n}</td><td class="l">${tg}</td><td class="l">${nt}</td><td colspan="5" class="l mu">尚無資料，按「更新資料」取得</td></tr>`;
+  if (!Q) return `<tr class="item" data-s="${esc(w.sym)}"><td>${n}</td><td class="l">${tg}</td><td class="l">${nt}</td><td colspan="4" class="l mu">尚無資料，按「更新資料」取得</td><td><button class="btn sm" data-quick-hold="${esc(w.sym)}">轉持股</button></td></tr>`;
   const ch = (Q.px / Q.prev - 1) * 100, al = allowed(w.sym), ok = sg ? ["A", "B", "C", "D"].filter(k => sg[k] && sg[k].ok) : [];
   return `<tr class="item" data-s="${esc(w.sym)}">
     <td>${n}</td>
@@ -1304,25 +1366,36 @@ function watchPage() {
 }
 
 function hrow(h, full) {
+  const hIdx = DB.holdings.indexOf(h);
   const Q = quote(h.sym), m = mkt(h.sym);
-  const n = `<b>${esc(h.name)}</b> <div class="mu">${esc(h.sym)}</div>`;
-  if (!Q) return `<tr class="item" data-s="${esc(h.sym)}"><td>${n}</td><td colspan="${full ? 11 : 5}" class="l mu">尚無行情資料，點右側可編輯</td><td><button class="btn sm" data-edit="${esc(h.sym)}">編輯</button></td></tr>`;
+  const n = `<b>${esc(h.name || "未命名")}</b> <div class="mu">${esc(h.sym || "⚠️ 未填代號")}</div>`;
+  const editBtn = `<button class="btn sm" data-edit-idx="${hIdx}">編輯 / 移除</button>`;
+
+  if (!Q) {
+    return `<tr class="item" data-hidx="${hIdx}" data-s="${esc(h.sym)}">
+      <td>${n}</td>
+      <td class="num">${h.shares ? fmt(h.shares, 0) : "—"}</td>
+      <td class="num">${h.cost ? fmt(h.cost) : "—"}</td>
+      <td colspan="${full ? 9 : 3}" class="l mu">尚無行情資料（若代號有誤或漏填，請點右側「編輯 / 移除」修正或刪除）</td>
+      <td>${editBtn}</td>
+    </tr>`;
+  }
   const ch = (Q.px / Q.prev - 1) * 100, pl = (Q.px - h.cost) * h.shares, pc = (Q.px / h.cost - 1) * 100;
   const [k, t] = stat(h, Q.px), st = `<span class="chip ${k}">${t}</span>`;
   const rg = h.tp - h.stop, pos = rg > 0 ? Math.max(0, Math.min(100, (Q.px - h.stop) / rg * 100)) : 50;
 
   if (!full) {
-    return `<tr class="item" data-s="${esc(h.sym)}">
+    return `<tr class="item" data-hidx="${hIdx}" data-s="${esc(h.sym)}">
       <td><b>${esc(h.name)}</b> <span class="mu">${esc(h.sym)}</span></td>
       <td class="num">${fmt(Q.px)}</td>
       <td class="num" style="color:${cc(ch)}">${sgn(ch)}%</td>
       <td class="num">${cur(m)}${fmt(Q.px * h.shares, 0)}</td>
       <td class="num" style="color:${cc(pc)};font-weight:700">${sgn(pc)}%</td>
       <td class="l">${st}</td>
-      <td><button class="btn sm" data-edit="${esc(h.sym)}">編輯</button></td>
+      <td><button class="btn sm" data-edit-idx="${hIdx}">編輯</button></td>
     </tr>`;
   }
-  return `<tr class="item" data-s="${esc(h.sym)}">
+  return `<tr class="item" data-hidx="${hIdx}" data-s="${esc(h.sym)}">
     <td>${n}</td>
     <td class="num">${fmt(h.shares, 0)}</td>
     <td class="num">${fmt(h.cost)}</td>
@@ -1335,7 +1408,7 @@ function hrow(h, full) {
     <td class="l">${h.strategy ? `<span class="chip mu-chip">${h.strategy}</span>` : '<span class="mu">—</span>'}</td>
     <td class="l">${st}</td>
     <td class="l">${revCell(h.sym)}</td>
-    <td><button class="btn sm" data-edit="${esc(h.sym)}">編輯</button></td>
+    <td><button class="btn sm" data-edit-idx="${hIdx}">編輯</button></td>
   </tr>`;
 }
 
@@ -1368,7 +1441,7 @@ function home() {
 }
 
 function list() {
-  const raw = DB.holdings.filter(h => (mk === "ALL" || mkt(h.sym) === mk) && (!QFILTER || h.sym.toLowerCase().includes(QFILTER) || (h.name || "").toLowerCase().includes(QFILTER)));
+  const raw = DB.holdings.filter(h => (mk === "ALL" || mkt(h.sym) === mk) && (!QFILTER || (h.sym || "").toLowerCase().includes(QFILTER) || (h.name || "").toLowerCase().includes(QFILTER)));
   const L = sortBy(raw, SORT.hold[0], SORT.hold[1], HM);
   return banner() +
     `<div class="row" style="margin-bottom:14px">
@@ -1529,8 +1602,8 @@ function indexDetail(sym) {
 
 function detail(sym) {
   if (DB.indices[sym]) return indexDetail(sym);
-  const h = held(sym), Q = quote(sym);
-  if (!Q) return `<div class="dgrid"><div class="dl"><div class="card">${esc(nameOf(sym))} 目前還沒有行情資料。填好右側資料並儲存後，按右上角「更新資料」即可取得線圖。</div></div><div class="dr">${tagCard(sym)}${editor(sym, h)}</div></div>`;
+  const h = held(sym), hIdx = h ? DB.holdings.indexOf(h) : -1, Q = quote(sym);
+  if (!Q) return `<div class="dgrid"><div class="dl"><div class="card">${esc(nameOf(sym))} 目前還沒有行情資料。填好右側資料並儲存後，按右上角「更新資料」即可取得線圖。</div></div><div class="dr">${tagCard(sym)}${editor(sym, h, false, hIdx)}</div></div>`;
   const S = Q[TF] || Q.d, d = S.slice(-N[TF]), ch = (Q.px / Q.prev - 1) * 100, m = mkt(sym), w0 = DB.watchlist.find(x => x.sym === sym), tg = (h || w0 || {}).tag;
 
   let head = `<div class="card">
@@ -1577,7 +1650,7 @@ function detail(sym) {
     <button data-dtab="edit" class="${DTAB === "edit" ? "on" : ""}" style="flex:1">${h ? "編輯持股設定" : "加入持股設定"}</button>
   </div>`;
 
-  const rightContent = DTAB === "edit" ? (tagCard(sym) + editor(sym, h)) : (posCard + stratCard(sym, h) + indCard(Q) + tagCard(sym));
+  const rightContent = DTAB === "edit" ? (tagCard(sym) + editor(sym, h, false, hIdx)) : (posCard + stratCard(sym, h) + indCard(Q) + tagCard(sym));
 
   return `<div class="dgrid">
     <div class="dl">${head}${chartCard(S, d, lines(h, h ? ex(h) : null))}<div class="cols2">${revCard(sym)}${newsCard(sym, Q)}</div></div>
@@ -1613,17 +1686,25 @@ function render() {
   document.querySelectorAll("[data-go-hold]").forEach(b => b.onclick = () => { mk = b.dataset.goHold; tab = "hold"; sel = null; render(); scrollTo(0, 0); });
   document.querySelectorAll(".item[data-s], .alloc-seg[data-s], .alloc-legend span[data-s]").forEach(b => b.onclick = e => {
     if (e.target.closest("button")) return;
-    open(b.dataset.s);
+    const s = b.dataset.s;
+    const hidx = parseInt(b.dataset.hidx ?? "-1", 10);
+    if (!s && hidx >= 0 && DB.holdings[hidx]) {
+      openDrawer(editor("", DB.holdings[hidx], true, hidx));
+      return;
+    }
+    if (s) open(s);
   });
-  document.querySelectorAll("[data-edit]").forEach(b => b.onclick = e => {
+  document.querySelectorAll("[data-edit-idx]").forEach(b => b.onclick = e => {
     e.stopPropagation();
-    const s = b.dataset.edit;
-    openDrawer(editor(s, held(s), true));
+    const idx = parseInt(b.dataset.editIdx, 10);
+    const h = DB.holdings[idx];
+    if (h) openDrawer(editor(h.sym, h, true, idx));
   });
   document.querySelectorAll("[data-quick-hold]").forEach(b => b.onclick = e => {
     e.stopPropagation();
     const s = b.dataset.quickHold;
-    openDrawer(editor(s, held(s), true));
+    const idx = DB.holdings.findIndex(x => x.sym === s);
+    openDrawer(editor(s, idx >= 0 ? DB.holdings[idx] : null, true, idx));
   });
   document.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => { tab = b.dataset.nav; sel = null; render(); scrollTo(0, 0); });
   document.querySelectorAll("[data-sort]").forEach(h => h.onclick = () => {
@@ -1634,12 +1715,15 @@ function render() {
 
   const on = (i, f) => { const e = $(i); if (e) e.onclick = f; };
   on("#bk", goBack); bindChart(); on("#svt", saveTag); on("#upd", refreshData); on("#hb", goBack);
-  on("#sv", () => saveHolding(sel)); on("#rm", () => removeHolding(sel)); on("#rmw", () => removeWatch(sel));
+  on("#sv", saveHolding); on("#rm", removeHolding); on("#rmw", removeWatch);
   on("#gs", saveGH); on("#gt", testGH); on("#gc", clearGH);
   on("#qadd-btn", () => openDrawer(quickAddDrawerHtml()));
   on("#open-hold-add", () => openDrawer(quickAddDrawerHtml()));
   on("#open-watch-add", () => openDrawer(quickAddDrawerHtml()));
-  on("#open-dr-edit", () => openDrawer(editor(sel, held(sel), true)));
+  on("#open-dr-edit", () => {
+    const h = held(sel);
+    openDrawer(editor(sel, h, true, h ? DB.holdings.indexOf(h) : -1));
+  });
 
   const hf = $("#hold-filter");
   if (hf) {
@@ -1659,6 +1743,7 @@ function render() {
 }
 
 function open(s) {
+  if (!s) return;
   sel = s; DTAB = "strat";
   $("#rs").innerHTML = ""; $("#q").value = "";
   try { history.pushState({ d: 1 }, ""); } catch (e) {}
@@ -1668,7 +1753,7 @@ function open(s) {
 /* 搜尋與快捷鍵 */
 function hits(v) {
   v = v.trim().toLowerCase(); if (!v) return [];
-  const u = [...DB.holdings, ...DB.watchlist.filter(w => !held(w.sym))];
+  const u = [...DB.holdings.filter(h => h.sym), ...DB.watchlist.filter(w => w.sym && !held(w.sym))];
   return u.filter(x => x.sym.toLowerCase().includes(v) || (x.name || "").toLowerCase().includes(v)).slice(0, 10);
 }
 $("#q").oninput = e => {
