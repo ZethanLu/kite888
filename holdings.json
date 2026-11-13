@@ -134,8 +134,8 @@
     {
       "sym": "NVDA",
       "name": "Nvdia",
-      "shares": 2,
-      "cost": 169.11,
+      "shares": 3,
+      "cost": 165.11,
       "stop": 69,
       "tp": 500,
       "why": "遇到倒楣事大跌。",
