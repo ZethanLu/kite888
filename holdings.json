@@ -272,6 +272,16 @@
       "why": "大跌撿這次主流之一ASIC",
       "rule": "",
       "entry_date": "2026-11-16"
+    },
+    {
+      "sym": "00411A.TW",
+      "name": "統一前沿科技",
+      "shares": 4000,
+      "cost": 8.87,
+      "stop": 8.11,
+      "tp": 11,
+      "why": "",
+      "rule": "ETF 不設硬停損"
     }
   ],
   "watchlist": [
