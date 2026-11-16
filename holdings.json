@@ -259,6 +259,19 @@
           "fall_back"
         ]
       }
+    },
+    {
+      "tag": "市值排列",
+      "tag_note": "11月率先反彈(ASIC)",
+      "sym": "3661.TW",
+      "name": "世芯-KY",
+      "shares": 6,
+      "cost": 3675,
+      "stop": 3500,
+      "tp": 4400,
+      "why": "大跌撿這次主流之一ASIC",
+      "rule": "",
+      "entry_date": "2026-11-16"
     }
   ],
   "watchlist": [
@@ -277,12 +290,6 @@
     {
       "sym": "3443.TW",
       "name": "創意",
-      "tag": "市值排列",
-      "tag_note": "11月率先反彈(ASIC)"
-    },
-    {
-      "sym": "3661.TW",
-      "name": "世芯-KY",
       "tag": "市值排列",
       "tag_note": "11月率先反彈(ASIC)"
     }
