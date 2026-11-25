@@ -239,6 +239,17 @@
       "why": "衛星版\nSPACEX太空計畫",
       "rule": "",
       "entry_date": "2026-11-13"
+    },
+    {
+      "sym": "00411A.TWO",
+      "name": "統一前沿科技ETF",
+      "shares": 4000,
+      "cost": 8.88,
+      "stop": 6,
+      "tp": 20,
+      "why": "",
+      "rule": "ETF 不設硬停損",
+      "entry_date": "2026-11-16"
     }
   ],
   "watchlist": [
