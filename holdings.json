@@ -250,6 +250,17 @@
       "why": "",
       "rule": "ETF 不設硬停損",
       "entry_date": "2026-11-16"
+    },
+    {
+      "sym": "ANT",
+      "name": "Anthropic",
+      "shares": 3,
+      "cost": 84.83,
+      "stop": 60,
+      "tp": 100,
+      "why": "",
+      "rule": "",
+      "entry_date": "2026-11-24"
     }
   ],
   "watchlist": [
