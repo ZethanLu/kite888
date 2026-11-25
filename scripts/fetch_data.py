@@ -81,19 +81,43 @@ def fetch_real(sym):
     import yfinance as yf
     for k in range(3):
         try:
+            # 1. 抓取 5 年歷史資料供均線與策略計算
             t = yf.Ticker(sym)
             h = t.history(period="5y", interval="1d", auto_adjust=False)
+            if h is None or h.empty:
+                raise ValueError("5y history empty")
+
             df = h[["Open", "High", "Low", "Close", "Volume"]].copy()
             df.columns = ["open", "high", "low", "close", "volume"]
             df.index = pd.DatetimeIndex(df.index).tz_localize(None).normalize()
             df = df.dropna(subset=["open", "high", "low", "close"])
             df["volume"] = df["volume"].fillna(0)
+
+            # 2. 用 yf.download 抓取近 5 日資料，補齊剛收盤可能尚未同步到 history() 的最新一根日 K
+            recent = yf.download(sym, period="5d", interval="1d", auto_adjust=False, progress=False)
+            if recent is not None and not recent.empty:
+                if isinstance(recent.columns, pd.MultiIndex):
+                    recent.columns = recent.columns.get_level_values(0)
+                r_df = recent[["Open", "High", "Low", "Close", "Volume"]].copy()
+                r_df.columns = ["open", "high", "low", "close", "volume"]
+                r_df.index = pd.DatetimeIndex(r_df.index).tz_localize(None).normalize()
+                r_df = r_df.dropna(subset=["open", "high", "low", "close"])
+                r_df["volume"] = r_df["volume"].fillna(0)
+                # 合併並以最新抓取的資料覆蓋同日期紀錄
+                df = pd.concat([df, r_df])
+                df = df[~df.index.duplicated(keep="last")].sort_index()
+
             if len(df) < 30:
-                raise ValueError("no data")
+                raise ValueError("insufficient rows")
+
+            last_dt = df.index[-1].strftime("%Y-%m-%d")
+            last_px = round(float(df["close"].iloc[-1]), 2)
+            print(f"[OK] {sym}: 最新日期 {last_dt}, 收盤 {last_px}")
             return df, parse_news(t)
         except Exception as e:
-            print(f"{sym} 第 {k + 1} 次失敗:{e}", file=sys.stderr)
-            time.sleep(3 * (k + 1))
+            print(f"[RETRY {k + 1}/3] {sym} 抓取失敗: {e}", file=sys.stderr)
+            time.sleep(2 * (k + 1))
+    print(f"[FAIL] {sym} 全部重試失敗，將沿用舊資料", file=sys.stderr)
     return None, []
 
 
