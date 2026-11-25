@@ -112,8 +112,8 @@
     {
       "sym": "MRVL",
       "name": "Marvell",
-      "shares": 8,
-      "cost": 185.03,
+      "shares": 11,
+      "cost": 171.05,
       "stop": 85,
       "tp": 400,
       "why": "",
