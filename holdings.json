@@ -239,26 +239,6 @@
       "why": "衛星版\nSPACEX太空計畫",
       "rule": "",
       "entry_date": "2026-11-13"
-    },
-    {
-      "sym": "00631L.TW",
-      "name": "0050正2",
-      "shares": 1000,
-      "cost": 28.25,
-      "stop": 23.8,
-      "tp": 32.5,
-      "why": "市場大跌 撿正2",
-      "rule": "",
-      "entry_date": "2026-11-16",
-      "tp_after": 10,
-      "rules": {
-        "stop": [
-          "loss5"
-        ],
-        "tp": [
-          "fall_back"
-        ]
-      }
     }
   ],
   "watchlist": [
