@@ -90,8 +90,8 @@
     {
       "sym": "AVGO",
       "name": "Broadcom",
-      "shares": 5,
-      "cost": 331.53,
+      "shares": 6,
+      "cost": 329.4,
       "stop": 218,
       "tp": 600,
       "why": "",
